@@ -72,6 +72,20 @@ create policy "Users can view own notifications" on public.notifications for sel
 drop policy if exists "Users can update own notifications" on public.notifications;
 create policy "Users can update own notifications" on public.notifications for update using (user_id = auth.uid());
 
+drop policy if exists "Users can insert own notifications" on public.notifications;
+create policy "Users can insert own notifications" on public.notifications for insert to authenticated
+with check (
+  user_id = auth.uid()
+  and (application_id is null or exists (
+    select 1 from public.rent_applications a
+    where a.id = application_id and a.user_id = auth.uid()
+  ))
+);
+
+drop policy if exists "Users can delete own applications" on public.rent_applications;
+create policy "Users can delete own applications" on public.rent_applications for delete to authenticated
+using (user_id = auth.uid() and status = 'pending_review');
+
 insert into storage.buckets (id, name, public)
 values ('contract-documents', 'contract-documents', false)
 on conflict (id) do nothing;
@@ -87,6 +101,10 @@ using (bucket_id = 'contract-documents' and (storage.foldername(name))[1] = auth
 drop policy if exists "Admins can view contracts" on storage.objects;
 create policy "Admins can view contracts" on storage.objects for select to authenticated
 using (bucket_id = 'contract-documents' and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
+drop policy if exists "Users can delete own contracts" on storage.objects;
+create policy "Users can delete own contracts" on storage.objects for delete to authenticated
+using (bucket_id = 'contract-documents' and (storage.foldername(name))[1] = auth.uid()::text);
 
 -- 기존 데이터에 신청번호가 없는 경우를 위한 일괄 생성
 update public.rent_applications
