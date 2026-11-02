@@ -28,7 +28,7 @@ export default function Home() {
     if (!file || !address || !bank || !account || !landlordName) { setMessage('계약서, Property address, 계좌정보를 모두 입력해주세요.'); return; }
     setLoading(true); const number = makeNumber();
     const { data: application, error } = await supabase.from('rent_applications').insert({ user_id: user.id, application_number: number, rent_amount: rent, service_fee: fee, total_amount: total, landlord_name: landlordName, landlord_bank: bank, landlord_account: account, property_address: address, status: 'pending_review', test_payment_status: 'approved', submitted_at: new Date().toISOString() }).select('id').single();
-    if (error || !application) { setLoading(false); setMessage('We couldn't save your application.'); return; }
+    if (error || !application) { setLoading(false); setMessage('We could not save your application.'); return; }
     const path = `${user.id}/${application.id}/${file.name}`; const { error: uploadError } = await supabase.storage.from('contract-documents').upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) { await supabase.from('rent_applications').delete().eq('id', application.id); setLoading(false); setMessage(`Upload your contract에 실패했습니다: ${uploadError.message}`); return; }
     const { error: updateError } = await supabase.from('rent_applications').update({ contract_file_path: path, contract_file_name: file.name, contract_file_size: file.size }).eq('id', application.id).eq('user_id', user.id);
