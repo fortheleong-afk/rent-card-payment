@@ -1,0 +1,6 @@
+'use client';
+import Link from 'next/link';
+import { useState } from 'react';
+import { LockKeyhole } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+export default function Login(){const [email,setEmail]=useState('');const [password,setPassword]=useState('');const [message,setMessage]=useState('');const login=async()=>{setMessage('');const {error}=await supabase.auth.signInWithPassword({email,password});if(error){setMessage('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');return}window.location.href='/';};return <main className="auth-page"><div className="auth-box"><Link href="/" className="brand"><span className="logo">J</span><span>집업<span>페이</span></span></Link><h1>다시 만나서 반가워요</h1><p>로그인하고 월세 결제 현황을 확인하세요.</p><label>이메일<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label><label>비밀번호<input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="비밀번호를 입력해주세요"/></label>{message&&<p>{message}</p>}<button className="primary full" onClick={login}>로그인</button><div className="auth-help"><span>Supabase Auth 연결</span></div><small><LockKeyhole size={13}/> 금융 거래는 테스트 모드</small></div></main>}
