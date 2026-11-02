@@ -35,6 +35,8 @@ export default function NewApplication() {
     event.preventDefault();
     if (!file || !landlordName || !bank || !account || !address) { setMessage('계약서, 주소, 임대인 계좌정보를 모두 입력해주세요.'); return; }
     setLoading(true); setMessage('');
+    const { data: profile } = await supabase.from('profiles').select('full_name,phone').eq('id', userId).maybeSingle();
+    if (!profile?.phone) { setLoading(false); setMessage('신청 전에 프로필에서 전화번호를 입력해주세요.'); return; }
     const applicationNumber = makeNumber();
     const { data: application, error: insertError } = await supabase.from('rent_applications').insert({ user_id: userId, application_number: applicationNumber, rent_amount: rent, service_fee: fee, total_amount: rent + fee, landlord_name: landlordName, landlord_bank: bank, landlord_account: account, property_address: address, status: 'pending_review', submitted_at: new Date().toISOString() }).select('id').single();
     if (insertError || !application) { setLoading(false); setMessage('신청 저장에 실패했습니다. 관리자에게 문의해주세요.'); return; }
