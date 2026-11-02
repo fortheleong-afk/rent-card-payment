@@ -21,12 +21,59 @@ alter table public.rent_applications add constraint rent_applications_status_che
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
+  phone text,
   role text not null default 'tenant' check (role in ('tenant', 'admin')),
   created_at timestamptz not null default now()
 );
+alter table public.profiles add column if not exists phone text;
 alter table public.profiles enable row level security;
 drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile" on public.profiles for select using (id = auth.uid());
+drop policy if exists "Users can update own profile" on public.profiles;
+create policy "Users can update own profile" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid());
+drop policy if exists "Admins can view profiles" on public.profiles;
+create policy "Admins can view profiles" on public.profiles for select using (
+  exists (select 1 from public.profiles admin_profile where admin_profile.id = auth.uid() and admin_profile.role = 'admin')
+);
+
+create or replace function public.handle_new_user_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, full_name, phone)
+  values (new.id, new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'phone')
+  on conflict (id) do update set
+    full_name = coalesce(excluded.full_name, profiles.full_name),
+    phone = coalesce(excluded.phone, profiles.phone);
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created_profile on auth.users;
+create trigger on_auth_user_created_profile
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user_profile();
+
+insert into public.profiles (id, full_name, phone)
+select id, raw_user_meta_data ->> 'full_name', raw_user_meta_data ->> 'phone'
+from auth.users
+where not exists (select 1 from public.profiles p where p.id = auth.users.id)
+on conflict (id) do nothing;
+
+create or replace function public.admin_user_contacts(p_user_ids uuid[])
+returns table(id uuid, email text)
+language sql
+security definer
+set search_path = public, auth
+as $$
+  select u.id, u.email::text
+  from auth.users u
+  where u.id = any(p_user_ids)
+    and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin');
+$$;
 
 create table if not exists public.application_status_history (
   id uuid primary key default gen_random_uuid(),
