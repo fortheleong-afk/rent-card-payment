@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './faq.css';
 import './dashboard.css';
 import './admin-extra.css';
 
