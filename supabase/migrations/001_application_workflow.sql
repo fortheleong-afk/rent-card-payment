@@ -13,6 +13,11 @@ alter table public.rent_applications
   add column if not exists cancelled_at timestamptz,
   add column if not exists test_payment_status text default 'not_started';
 
+-- 신청 취소 상태를 사용자 취소 RPC에서 사용할 수 있도록 허용합니다.
+alter table public.rent_applications drop constraint if exists rent_applications_status_check;
+alter table public.rent_applications add constraint rent_applications_status_check
+  check (status in ('pending_review', 'approved', 'rejected', 'cancelled', 'payment_pending', 'payment_completed', 'transfer_pending', 'transfer_completed', 'completed'));
+
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
