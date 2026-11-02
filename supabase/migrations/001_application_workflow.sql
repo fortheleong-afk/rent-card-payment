@@ -11,7 +11,10 @@ alter table public.rent_applications
   add column if not exists submitted_at timestamptz,
   add column if not exists rejection_reason text,
   add column if not exists cancelled_at timestamptz,
-  add column if not exists test_payment_status text default 'not_started';
+  add column if not exists test_payment_status text default 'not_started',
+  add column if not exists applicant_name text,
+  add column if not exists applicant_email text,
+  add column if not exists applicant_phone text;
 
 -- 신청 취소 상태를 사용자 취소 RPC에서 사용할 수 있도록 허용합니다.
 alter table public.rent_applications drop constraint if exists rent_applications_status_check;
@@ -42,6 +45,28 @@ $$;
 drop policy if exists "Admins can view profiles" on public.profiles;
 create policy "Admins can view profiles" on public.profiles for select using (public.is_admin());
 
+create or replace function public.prevent_profile_privilege_changes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.role is distinct from old.role and not public.is_admin() then
+    raise exception 'profile role cannot be changed by the account owner';
+  end if;
+  if new.id is distinct from old.id then
+    raise exception 'profile id cannot be changed';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_profile_privileges on public.profiles;
+create trigger protect_profile_privileges
+  before update on public.profiles
+  for each row execute procedure public.prevent_profile_privilege_changes();
+
 create or replace function public.handle_new_user_profile()
 returns trigger
 language plpgsql
@@ -68,6 +93,15 @@ select id, raw_user_meta_data ->> 'full_name', raw_user_meta_data ->> 'phone'
 from auth.users
 where not exists (select 1 from public.profiles p where p.id = auth.users.id)
 on conflict (id) do nothing;
+
+update public.rent_applications a
+set applicant_name = coalesce(a.applicant_name, p.full_name),
+    applicant_phone = coalesce(a.applicant_phone, p.phone),
+    applicant_email = coalesce(a.applicant_email, u.email)
+from public.profiles p
+join auth.users u on u.id = p.id
+where a.user_id = p.id
+  and (a.applicant_name is null or a.applicant_phone is null or a.applicant_email is null);
 
 create or replace function public.admin_user_contacts(p_user_ids uuid[])
 returns table(id uuid, email text)
