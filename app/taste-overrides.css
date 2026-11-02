@@ -1,0 +1,158 @@
+/* Divercity Pay visual refresh: product-first fintech, restrained and operational. */
+:root {
+  --navy: #132b4f;
+  --blue: #2563eb;
+  --pale: #f5f8fc;
+  --ink: #17263d;
+  --muted: #64748b;
+  --line: #dce5f0;
+  --surface: #ffffff;
+  --soft-blue: #eaf2ff;
+  --green: #16835b;
+}
+
+body {
+  background: #f8fafc;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.test-banner {
+  background: var(--navy);
+  color: #dbeafe;
+  font-size: 11px;
+  letter-spacing: 0;
+  padding: 9px 16px;
+}
+
+header {
+  background: rgba(248, 250, 252, .92);
+  border-bottom: 1px solid rgba(220, 229, 240, .9);
+  box-shadow: none;
+}
+
+.nav { min-height: 72px; }
+.brand { font-weight: 800; letter-spacing: -0.05em; }
+.brand .logo { box-shadow: none; }
+nav a { color: #53657d; font-size: 12px; }
+nav a:hover { color: var(--blue); }
+
+.hero {
+  align-items: center;
+  gap: 72px;
+  min-height: 585px;
+  padding-top: 86px;
+  padding-bottom: 88px;
+}
+.hero-copy { max-width: 560px; }
+.eyebrow { color: var(--blue); font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.hero h1 { color: var(--navy); font-size: clamp(42px, 6vw, 72px); line-height: 1.08; letter-spacing: -.075em; }
+.hero h1 em { color: var(--blue); font-style: normal; }
+.hero-copy > p { color: #5e718b; font-size: 16px; line-height: 1.75; }
+.primary { border-radius: 8px; box-shadow: 0 8px 22px rgba(37, 99, 235, .16); }
+.trust { color: #71839a; font-size: 11px; }
+
+/* The hero is a real product fragment, not a decorative credit-card mockup. */
+.hero-card {
+  width: min(100%, 430px);
+  min-height: 265px;
+  transform: none;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 18px 50px rgba(19, 43, 79, .10);
+  color: var(--ink);
+  padding: 28px;
+}
+.card-top { color: #71839a; font-size: 12px; }
+.hero-card .status { color: var(--green); font-size: 11px; }
+.hero-card .dot { background: #27ae78; box-shadow: 0 0 0 4px #e3f7ee; }
+.hero-card .amount { color: var(--navy); font-size: 40px; letter-spacing: -.06em; margin: 24px 0 20px; }
+.hero-card .card-line { background: var(--line); }
+.hero-card .card-info { color: #7889a0; font-size: 11px; }
+.hero-card .card-info strong { color: var(--ink); font-size: 13px; }
+.hero-card .card-bottom { border-top: 1px solid var(--line); color: #73839a; font-size: 10px; margin-top: 24px; padding-top: 18px; }
+.hero-card .mini-logo { background: var(--blue); }
+.hero-card .visa { color: var(--blue); }
+
+.numbers {
+  background: var(--navy);
+  border-top: 0;
+  border-bottom: 0;
+  color: #fff;
+  gap: 0;
+  padding: 28px max(24px, calc((100% - 1120px) / 2));
+}
+.numbers > div { border-right: 1px solid rgba(255,255,255,.16); padding: 4px 38px; }
+.numbers > div:last-child { border-right: 0; }
+.numbers strong { color: #fff; font-size: 28px; }
+.numbers small { color: #b9c9de; font-size: 11px; }
+
+.section { padding-top: 112px; padding-bottom: 112px; }
+.section-head { margin-bottom: 44px; }
+.section-head h2 { color: var(--navy); font-size: 32px; letter-spacing: -.06em; }
+.section-head > p { color: #74859b; font-size: 12px; line-height: 1.7; }
+
+.how-grid { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+.how-card {
+  display: grid;
+  grid-template-columns: 42px 42px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 18px;
+  min-height: 112px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 18px 20px;
+}
+.how-card:nth-child(2) { background: var(--soft-blue); }
+.how-card:nth-child(2), .how-card:nth-child(4) { padding-left: 44px; padding-right: 44px; }
+.how-card .num { color: #9aabc0; font-size: 11px; font-weight: 800; }
+.how-card svg:not(.chev) { color: var(--blue); }
+.how-card h3 { font-size: 15px; margin: 0 0 5px; }
+.how-card p { color: var(--muted); font-size: 12px; margin: 0; }
+.how-card .chev { color: #99a9bc; }
+
+.apply-section { background: #edf4fc; border-top: 1px solid #dfeaf7; border-bottom: 1px solid #dfeaf7; padding: 104px 0; }
+.apply-box { border: 1px solid #d9e5f2; border-radius: 14px; box-shadow: 0 14px 35px rgba(19,43,79,.07); }
+.progress { background: #fbfdff; border-bottom: 1px solid var(--line); }
+.progress > div span { border: 1px solid #cfdae8; color: #8a9bb0; }
+.progress > div.active span { background: var(--blue); border-color: var(--blue); }
+.form-content { background: #fff; }
+.form-content h3 { color: var(--navy); letter-spacing: -.04em; }
+.upload { border: 1px dashed #9cb9e5; background: #f8fbff; border-radius: 10px; }
+.upload:hover { border-color: var(--blue); background: var(--soft-blue); }
+.summary, .confirm { border: 1px solid var(--line); background: #f8fafc; border-radius: 10px; }
+.secondary { border-radius: 8px; }
+.auth-message { border-radius: 8px; }
+
+.faq-list { max-width: 820px; border-top: 0; }
+.faq-list details { background: #eef4fb; border: 0; border-radius: 10px; margin-bottom: 8px; padding: 20px 22px; }
+.faq-list details[open] { background: #e4efff; }
+.faq-list summary { color: var(--navy); }
+.faq-list p { color: #60738c; margin-bottom: 0; }
+
+.safe { border: 1px solid #d8e6f7; border-radius: 14px; background: #f2f7ff; margin-bottom: 96px; padding: 30px 34px; }
+.safe svg { color: var(--blue); }
+.safe h2 { color: var(--navy); font-size: 20px; }
+.safe p { color: #647792; font-size: 12px; }
+footer { border-top: 1px solid var(--line); background: #fff; }
+.footer-inner { min-height: 88px; }
+
+@media (max-width: 720px) {
+  .hero { display: flex; min-height: auto; padding: 64px 20px 72px; gap: 42px; }
+  .hero h1 { font-size: 46px; }
+  .hero-copy > p { font-size: 14px; }
+  .hero-card { padding: 22px; }
+  .numbers { display: grid; grid-template-columns: 1fr 1fr; padding: 18px 20px; }
+  .numbers > div { border-right: 0; padding: 12px 8px; }
+  .how-card, .how-card:nth-child(2), .how-card:nth-child(4) { grid-template-columns: 28px 34px minmax(0,1fr) 18px; gap: 10px; padding: 16px 6px; }
+  .how-card h3 { font-size: 14px; }
+  .how-card p { font-size: 11px; }
+  .apply-section { padding: 70px 0; }
+  .section { padding-top: 76px; padding-bottom: 76px; }
+  .section-head h2 { font-size: 28px; }
+  .safe { margin: 0 20px 72px; padding: 24px; }
+}
