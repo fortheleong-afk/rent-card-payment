@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 
 type Application = {
   id: string;
+  application_number: string | null;
   rent_amount: number;
   service_fee: number;
   total_amount: number;
@@ -36,7 +37,7 @@ export default function Dashboard() {
       setEmail(user.email ?? '');
       const { data: profile } = await supabase.from('profiles').select('full_name,phone').eq('id', user.id).maybeSingle();
       setName(profile?.full_name ?? user.user_metadata?.full_name ?? '');
-      const { data, error: queryError } = await supabase.from('rent_applications').select('id,rent_amount,service_fee,total_amount,status,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
+      const { data, error: queryError } = await supabase.from('rent_applications').select('id,application_number,rent_amount,service_fee,total_amount,status,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
       if (queryError) setError('신청 내역을 불러오지 못했습니다.');
       setApplications(data ?? []);
       setLoading(false);
@@ -54,8 +55,9 @@ export default function Dashboard() {
       <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>안전한 테스트 서비스</strong><span>금융사 계약 전까지 실제 카드 승인과 계좌 송금은 발생하지 않습니다.</span></div></div>
       <div className="dashboard-grid"><div className="dashboard-card"><span>전체 신청</span><strong>{applications.length}건</strong><small>내 월세 신청</small></div><div className="dashboard-card"><span>최근 상태</span><strong>{applications[0] ? statusLabel[applications[0].status] ?? applications[0].status : '신청 전'}</strong><small>가장 최근 신청</small></div><div className="dashboard-card"><span>최근 총액</span><strong>{applications[0] ? money(applications[0].total_amount) : '₩0'}</strong><small>월세 + 서비스 이용료</small></div></div>
       <div className="dashboard-section"><div className="dashboard-section-title"><h2>최근 신청 내역</h2><Link href="/applications">전체 보기 <ArrowRight size={14}/></Link></div>
-        {loading ? <div className="dashboard-empty">신청 내역을 불러오는 중...</div> : error ? <div className="dashboard-empty">{error}</div> : applications.length === 0 ? <div className="dashboard-empty"><FileText size={30}/><strong>아직 신청 내역이 없습니다.</strong><span>첫 월세 신청을 시작해보세요.</span><Link href="/applications/new" className="secondary">월세 신청하기</Link></div> : <div className="application-list">{applications.slice(0, 5).map(application => <Link href={`/applications/${application.id}`} className="application-row" key={application.id}><div><strong>{money(application.rent_amount)}</strong><span>{new Date(application.created_at).toLocaleDateString('ko-KR')} · 신청번호 {application.id.slice(0, 8).toUpperCase()}</span></div><div className="application-status"><span>{statusLabel[application.status] ?? application.status}</span><b>{money(application.total_amount)}</b></div></Link>)}</div>}
+        {loading ? <div className="dashboard-empty">신청 내역을 불러오는 중...</div> : error ? <div className="dashboard-empty">{error}</div> : applications.length === 0 ? <div className="dashboard-empty"><FileText size={30}/><strong>아직 신청 내역이 없습니다.</strong><span>첫 월세 신청을 시작해보세요.</span><Link href="/applications/new" className="secondary">월세 신청하기</Link></div> : <div className="application-list">{applications.slice(0, 5).map(application => <Link href={`/applications/${application.id}`} className="application-row" key={application.id}><div><strong>{money(application.rent_amount)}</strong><span>{new Date(application.created_at).toLocaleDateString('ko-KR')} · 신청번호 {application.application_number || application.id.slice(0, 8).toUpperCase()}</span></div><div className="application-status"><span>{statusLabel[application.status] ?? application.status}</span><b>{money(application.total_amount)}</b></div></Link>)}</div>}
       </div>
+      <div className="dashboard-help"><div><strong>다음 단계가 궁금하신가요?</strong><span>수수료, 보안, 신청 처리 기준을 확인할 수 있습니다.</span></div><div className="dashboard-help-links"><Link href="/fees">수수료 안내</Link><Link href="/contact">문의하기</Link></div></div>
       <p className="dashboard-foot"><Clock3 size={13}/> 심사 및 상태 변경은 테스트 운영자가 확인 후 반영합니다.</p>
     </section>
   </main>;
