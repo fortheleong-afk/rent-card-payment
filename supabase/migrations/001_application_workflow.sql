@@ -87,3 +87,26 @@ using (bucket_id = 'contract-documents' and exists (select 1 from public.profile
 update public.rent_applications
 set application_number = 'DP-' || to_char(created_at, 'YYYYMMDD') || '-' || upper(substr(replace(id::text, '-', ''), 1, 6))
 where application_number is null;
+
+create or replace function public.cancel_rent_application(p_application_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare changed boolean;
+begin
+  update public.rent_applications
+  set status = 'cancelled', cancelled_at = now()
+  where id = p_application_id and user_id = auth.uid() and status = 'pending_review';
+  get diagnostics changed = row_count > 0;
+  if changed then
+    insert into public.application_status_history(application_id, from_status, to_status, changed_by, reason)
+    select id, 'pending_review', 'cancelled', auth.uid(), '사용자 취소'
+    from public.rent_applications where id = p_application_id;
+  end if;
+  return changed;
+end;
+$$;
+revoke all on function public.cancel_rent_application(uuid) from public;
+grant execute on function public.cancel_rent_application(uuid) to authenticated;
