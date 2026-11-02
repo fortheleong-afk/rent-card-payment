@@ -156,3 +156,42 @@ footer { border-top: 1px solid var(--line); background: #fff; }
   .section-head h2 { font-size: 28px; }
   .safe { margin: 0 20px 72px; padding: 24px; }
 }
+
+/* How-it-works is a product flow panel: compact, high-contrast, and easy to scan. */
+#how.section {
+  max-width: 1160px;
+  margin: 56px auto;
+  padding: 72px 72px 78px;
+  border-radius: 22px;
+  background: var(--navy);
+  color: #fff;
+  overflow: hidden;
+}
+#how.section .section-head { align-items: end; margin-bottom: 42px; }
+#how.section .eyebrow { color: #8bb6ff; }
+#how.section .section-head h2 { color: #fff; font-size: clamp(30px, 4vw, 46px); }
+#how.section .section-head > p { color: #b9c9de; }
+#how.section .how-grid { border-top: 1px solid rgba(255,255,255,.22); }
+#how.section .how-card,
+#how.section .how-card:nth-child(2),
+#how.section .how-card:nth-child(4) {
+  min-height: 96px;
+  border-bottom: 1px solid rgba(255,255,255,.18);
+  background: transparent;
+  padding: 18px 12px;
+}
+#how.section .how-card:nth-child(2) { background: rgba(255,255,255,.08); }
+#how.section .how-card .num { color: #8ca5c7; }
+#how.section .how-card svg:not(.chev) { color: #82adff; }
+#how.section .how-card h3 { color: #fff; font-size: 16px; }
+#how.section .how-card p { color: #b4c5dc; }
+#how.section .how-card .chev { color: #7f9abc; }
+
+@media (max-width: 720px) {
+  #how.section { margin: 32px 16px; padding: 48px 24px 54px; border-radius: 16px; }
+  #how.section .section-head { display: block; }
+  #how.section .section-head > p { margin-top: 14px; }
+  #how.section .how-card,
+  #how.section .how-card:nth-child(2),
+  #how.section .how-card:nth-child(4) { min-height: 92px; padding: 14px 0; }
+}
