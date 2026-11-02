@@ -172,8 +172,8 @@ footer { border-top: 1px solid var(--line); background: #fff; }
 }
 
 /* Site-wide entrance motion: reveal sections as they enter the viewport. */
-main > section,
-main > footer,
+.home-page > section,
+.home-page > footer,
 .hero-card,
 .numbers > div,
 .how-card,
@@ -184,8 +184,8 @@ main > footer,
   transition-delay: var(--reveal-delay, 0ms);
 }
 
-main > section.is-visible,
-main > footer.is-visible,
+.home-page > section.is-visible,
+.home-page > footer.is-visible,
 .hero-card.is-visible,
 .numbers > div.is-visible,
 .how-card.is-visible,
@@ -222,8 +222,8 @@ main > footer.is-visible,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  main > section,
-  main > footer,
+  .home-page > section,
+  .home-page > footer,
   .hero-card,
   .numbers > div,
   .how-card,
@@ -236,8 +236,8 @@ main > footer.is-visible,
 }
 
 /* Explicit motion-ready state makes the entrance effect reliable after hydration. */
-html.motion-ready main > section,
-html.motion-ready main > footer,
+html.motion-ready .home-page > section,
+html.motion-ready .home-page > footer,
 html.motion-ready .hero-card,
 html.motion-ready .numbers > div,
 html.motion-ready .how-card,
@@ -246,8 +246,8 @@ html.motion-ready .faq-list details {
   transform: translateY(24px);
 }
 
-html.motion-ready main > section.is-visible,
-html.motion-ready main > footer.is-visible,
+html.motion-ready .home-page > section.is-visible,
+html.motion-ready .home-page > footer.is-visible,
 html.motion-ready .hero-card.is-visible,
 html.motion-ready .numbers > div.is-visible,
 html.motion-ready .how-card.is-visible,
@@ -261,8 +261,8 @@ html.motion-ready .faq-list details.is-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.motion-ready main > section,
-  html.motion-ready main > footer,
+  html.motion-ready .home-page > section,
+  html.motion-ready .home-page > footer,
   html.motion-ready .hero-card,
   html.motion-ready .numbers > div,
   html.motion-ready .how-card,
