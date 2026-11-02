@@ -8,3 +8,4 @@ create table if not exists public.rent_applications (
 alter table public.rent_applications enable row level security;
 create policy "Users can view own applications" on public.rent_applications for select using (auth.uid() = user_id);
 create policy "Users can create own applications" on public.rent_applications for insert with check (auth.uid() = user_id);
+create policy "Users can cancel own applications" on public.rent_applications for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
