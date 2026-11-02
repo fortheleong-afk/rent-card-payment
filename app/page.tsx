@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { ArrowRight, Building2, Check, ChevronRight, CreditCard, FileText, LockKeyhole, Menu, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import AuthStatus from '../components/AuthStatus';
@@ -13,6 +13,7 @@ const makeNumber = () => `DP-${new Date().toISOString().slice(0, 10).replaceAll(
 export default function Home() {
   const [menu, setMenu] = useState(false); const [step, setStep] = useState(0); const [rent, setRent] = useState(750000); const [done, setDone] = useState(false); const [testPaid, setTestPaid] = useState(false); const [consent, setConsent] = useState(false);
   const [file, setFile] = useState<File | null>(null); const [address, setAddress] = useState(''); const [landlordName, setLandlordName] = useState(''); const [bank, setBank] = useState(''); const [account, setAccount] = useState(''); const [message, setMessage] = useState(''); const [loading, setLoading] = useState(false); const [applicationNumber, setApplicationNumber] = useState('');
+  useEffect(() => { const cards = Array.from(document.querySelectorAll<HTMLElement>('#how .how-card')); if (!cards.length) return; if (!('IntersectionObserver' in window)) { cards.forEach(card => card.classList.add('is-visible')); return; } const observer = new IntersectionObserver(entries => { entries.forEach(entry => { if (entry.isIntersecting) { (entry.target as HTMLElement).classList.add('is-visible'); observer.unobserve(entry.target); } }); }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' }); cards.forEach(card => observer.observe(card)); return () => observer.disconnect(); }, []);
   const fee = Math.round(rent * 0.029); const total = rent + fee;
   const chooseFile = (event: ChangeEvent<HTMLInputElement>) => { const selected = event.target.files?.[0] ?? null; if (selected && (!['application/pdf', 'image/jpeg', 'image/png'].includes(selected.type) || selected.size > 10 * 1024 * 1024)) { setMessage('PDF, JPG, and PNG files only, up to 10MB.'); return; } setMessage(''); setFile(selected); };
   const next = async () => {
