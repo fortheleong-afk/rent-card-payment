@@ -23,6 +23,7 @@ const statusLabel: Record<string, string> = {
 
 export default function Dashboard() {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -33,6 +34,8 @@ export default function Dashboard() {
       const user = sessionData.session?.user;
       if (!user) { window.location.href = '/login'; return; }
       setEmail(user.email ?? '');
+      const { data: profile } = await supabase.from('profiles').select('full_name,phone').eq('id', user.id).maybeSingle();
+      setName(profile?.full_name ?? user.user_metadata?.full_name ?? '');
       const { data, error: queryError } = await supabase.from('rent_applications').select('id,rent_amount,service_fee,total_amount,status,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
       if (queryError) setError('신청 내역을 불러오지 못했습니다.');
       setApplications(data ?? []);
@@ -47,7 +50,7 @@ export default function Dashboard() {
     <div className="test-banner"><span className="pulse" />현재 테스트 모드예요 · 실제 결제와 송금은 실행되지 않습니다</div>
     <header><div className="wrap nav"><Link href="/" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link><div className="dashboard-actions"><span>{email}</span><button onClick={logout}><LogOut size={14}/> 로그아웃</button></div></div></header>
     <section className="dashboard-main wrap">
-      <div className="dashboard-heading"><div><div className="eyebrow">MY DASHBOARD</div><h1>안녕하세요, 반가워요</h1><p>월세 신청 현황을 한눈에 확인하세요.</p></div><Link href="/applications/new" className="primary"><Plus size={17}/> 월세 신청하기</Link></div>
+      <div className="dashboard-heading"><div><div className="eyebrow">MY DASHBOARD</div><h1>{name ? '안녕하세요, ' + name + '님' : '안녕하세요, 반가워요'}</h1><p>월세 신청 현황을 한눈에 확인하세요.</p></div><Link href="/profile" className="secondary">프로필 관리</Link><Link href="/applications/new" className="primary"><Plus size={17}/> 월세 신청하기</Link></div>
       <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>안전한 테스트 서비스</strong><span>금융사 계약 전까지 실제 카드 승인과 계좌 송금은 발생하지 않습니다.</span></div></div>
       <div className="dashboard-grid"><div className="dashboard-card"><span>전체 신청</span><strong>{applications.length}건</strong><small>내 월세 신청</small></div><div className="dashboard-card"><span>최근 상태</span><strong>{applications[0] ? statusLabel[applications[0].status] ?? applications[0].status : '신청 전'}</strong><small>가장 최근 신청</small></div><div className="dashboard-card"><span>최근 총액</span><strong>{applications[0] ? money(applications[0].total_amount) : '₩0'}</strong><small>월세 + 서비스 이용료</small></div></div>
       <div className="dashboard-section"><div className="dashboard-section-title"><h2>최근 신청 내역</h2><Link href="/applications">전체 보기 <ArrowRight size={14}/></Link></div>
