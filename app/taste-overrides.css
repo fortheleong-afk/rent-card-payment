@@ -157,6 +157,20 @@ footer { border-top: 1px solid var(--line); background: #fff; }
   .safe { margin: 0 20px 72px; padding: 24px; }
 }
 
+/* Scroll-triggered reveal: cards animate when they enter the viewport, not on page load. */
+#how.section .how-card,
+#how.section .how-card:nth-child(2),
+#how.section .how-card:nth-child(4) {
+  opacity: 0;
+  transform: translateY(24px);
+  animation: none;
+}
+#how.section .how-card.is-visible,
+#how.section .how-card:nth-child(2).is-visible,
+#how.section .how-card:nth-child(4).is-visible {
+  animation: divercity-rise .65s both;
+}
+
 /* Minimal white treatment: structure comes from spacing and rules, not colored panels. */
 body { background: #fff; }
 #how.section { background: transparent; }
