@@ -20,9 +20,9 @@ export default function AuthStatus() {
     return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
 
-  if (loading) return <span className="login ghost">확인 중...</span>;
-  if (!email) return <Link href="/login" className="login">로그인</Link>;
+  if (loading) return <span className="login ghost">Checking...</span>;
+  if (!email) return <Link href="/login" className="login">Log in</Link>;
 
   const logout = async () => { await supabase.auth.signOut(); window.location.href = '/'; };
-  return <div className="auth-status"><Link href="/dashboard" className="dashboard-link">내 대시보드</Link><span className="auth-email" title={email}>{email}</span><button className="login logout-button" onClick={logout}>로그아웃</button></div>;
+  return <div className="auth-status"><Link href="/dashboard" className="dashboard-link">My dashboard</Link><span className="auth-email" title={email}>{email}</span><button className="login logout-button" onClick={logout}>Log out</button></div>;
 }
