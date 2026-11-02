@@ -38,7 +38,10 @@ export default function NewApplication() {
     const { data: profile } = await supabase.from('profiles').select('full_name,phone').eq('id', userId).maybeSingle();
     if (!profile?.phone) { setLoading(false); setMessage('신청 전에 프로필에서 전화번호를 입력해주세요.'); return; }
     const applicationNumber = makeNumber();
-    const { data: application, error: insertError } = await supabase.from('rent_applications').insert({ user_id: userId, application_number: applicationNumber, rent_amount: rent, service_fee: fee, total_amount: rent + fee, landlord_name: landlordName, landlord_bank: bank, landlord_account: account, property_address: address, status: 'pending_review', submitted_at: new Date().toISOString() }).select('id').single();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const applicantEmail = sessionData.session?.user.email ?? null;
+    const { data: profileData } = await supabase.from('profiles').select('full_name,phone').eq('id', userId).maybeSingle();
+    const { data: application, error: insertError } = await supabase.from('rent_applications').insert({ user_id: userId, application_number: applicationNumber, applicant_name: profileData?.full_name ?? null, applicant_email: applicantEmail, applicant_phone: profileData?.phone ?? null, rent_amount: rent, service_fee: fee, total_amount: rent + fee, landlord_name: landlordName, landlord_bank: bank, landlord_account: account, property_address: address, status: 'pending_review', submitted_at: new Date().toISOString() }).select('id').single();
     if (insertError || !application) { setLoading(false); setMessage('신청 저장에 실패했습니다. 관리자에게 문의해주세요.'); return; }
     const path = `${userId}/${application.id}/${file.name}`;
     const { error: uploadError } = await supabase.storage.from('contract-documents').upload(path, file, { contentType: file.type, upsert: false });
