@@ -17,6 +17,7 @@ export default function Home() {
     const revealItems = Array.from(document.querySelectorAll<HTMLElement>('main > section, main > footer, .hero-card, .numbers > div, .how-card, .faq-list details'));
     if (!revealItems.length) return;
     revealItems.forEach((item, index) => item.style.setProperty('--reveal-delay', `${Math.min(index * 45, 240)}ms`));
+    const readyTimer = window.setTimeout(() => document.documentElement.classList.add('motion-ready'), 60);
     if (!('IntersectionObserver' in window)) {
       revealItems.forEach(item => item.classList.add('is-visible'));
       return;
@@ -30,7 +31,11 @@ export default function Home() {
       });
     }, { threshold: 0.14, rootMargin: '0px 0px -7% 0px' });
     revealItems.forEach(item => observer.observe(item));
-    return () => observer.disconnect();
+    return () => {
+      window.clearTimeout(readyTimer);
+      document.documentElement.classList.remove('motion-ready');
+      observer.disconnect();
+    };
   }, []);
   const fee = Math.round(rent * 0.029); const total = rent + fee;
   const chooseFile = (event: ChangeEvent<HTMLInputElement>) => { const selected = event.target.files?.[0] ?? null; if (selected && (!['application/pdf', 'image/jpeg', 'image/png'].includes(selected.type) || selected.size > 10 * 1024 * 1024)) { setMessage('PDF, JPG, and PNG files only, up to 10MB.'); return; } setMessage(''); setFile(selected); };
