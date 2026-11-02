@@ -10,6 +10,16 @@ alter table public.rent_applications
   add column if not exists contract_file_size integer,
   add column if not exists submitted_at timestamptz;
 
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  role text not null default 'tenant' check (role in ('tenant', 'admin')),
+  created_at timestamptz not null default now()
+);
+alter table public.profiles enable row level security;
+drop policy if exists "Users can view own profile" on public.profiles;
+create policy "Users can view own profile" on public.profiles for select using (id = auth.uid());
+
 create table if not exists public.application_status_history (
   id uuid primary key default gen_random_uuid(),
   application_id uuid not null references public.rent_applications(id) on delete cascade,
@@ -33,6 +43,15 @@ create table if not exists public.notifications (
 
 alter table public.application_status_history enable row level security;
 alter table public.notifications enable row level security;
+
+drop policy if exists "Admins can view all applications" on public.rent_applications;
+create policy "Admins can view all applications" on public.rent_applications for select using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+drop policy if exists "Admins can update applications" on public.rent_applications;
+create policy "Admins can update applications" on public.rent_applications for update using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+drop policy if exists "Admins can insert status history" on public.application_status_history;
+create policy "Admins can insert status history" on public.application_status_history for insert with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+drop policy if exists "Admins can insert notifications" on public.notifications;
+create policy "Admins can insert notifications" on public.notifications for insert with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
 
 drop policy if exists "Users can view own status history" on public.application_status_history;
 create policy "Users can view own status history" on public.application_status_history for select using (
