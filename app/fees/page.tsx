@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, LockKeyhole } from 'lucide-react';
+import { ArrowLeft, LockKeyhole } from 'lucide-react';
 
 export default function FeesPage() {
   return <main className="info-page">
