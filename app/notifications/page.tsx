@@ -1,0 +1,6 @@
+'use client';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Bell } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+export default function Notifications(){const [items,setItems]=useState<any[]>([]);useEffect(()=>{(async()=>{const {data:session}=await supabase.auth.getSession();if(!session.session){window.location.href='/login';return}const {data}=await supabase.from('notifications').select('*').eq('user_id',session.session.user.id).order('created_at',{ascending:false});setItems(data??[]);await supabase.from('notifications').update({is_read:true}).eq('user_id',session.session.user.id)})()},[]);return <main className="dashboard-page"><section className="dashboard-main wrap"><Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> 대시보드</Link><div className="dashboard-heading"><div><div className="eyebrow">NOTIFICATIONS</div><h1>알림</h1><p>신청 상태 변경과 처리 소식을 확인하세요.</p></div></div><div className="dashboard-section"><div className="application-list">{items.length===0?<div className="dashboard-empty"><Bell size={28}/><span>새로운 알림이 없습니다.</span></div>:items.map(item=><div className="application-row" key={item.id}><div><strong>{item.title}</strong><span>{item.message}</span></div><span>{new Date(item.created_at).toLocaleString('ko-KR')}</span></div>)}</div></div></section></main>}
