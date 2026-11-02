@@ -171,6 +171,70 @@ footer { border-top: 1px solid var(--line); background: #fff; }
   animation: divercity-rise .65s both;
 }
 
+/* Site-wide entrance motion: reveal sections as they enter the viewport. */
+main > section,
+main > footer,
+.hero-card,
+.numbers > div,
+.how-card,
+.faq-list details {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .72s ease, transform .72s cubic-bezier(.22, 1, .36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+main > section.is-visible,
+main > footer.is-visible,
+.hero-card.is-visible,
+.numbers > div.is-visible,
+.how-card.is-visible,
+.faq-list details.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero.is-visible .hero-copy {
+  animation: divercity-copy-in .8s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.hero.is-visible .hero-card {
+  animation: divercity-card-in .9s cubic-bezier(.22, 1, .36, 1) .12s both;
+}
+
+.numbers > div.is-visible {
+  transition-duration: .58s;
+}
+
+.how-card:hover,
+.faq-list details:hover {
+  transform: translateY(-3px);
+}
+
+@keyframes divercity-copy-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes divercity-card-in {
+  from { opacity: 0; transform: translateY(24px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main > section,
+  main > footer,
+  .hero-card,
+  .numbers > div,
+  .how-card,
+  .faq-list details {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none !important;
+  }
+}
+
 /* Safety fallback: content must remain visible even if an observer is unavailable. */
 #how.section .how-card,
 #how.section .how-card:nth-child(2),
