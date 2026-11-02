@@ -157,6 +157,15 @@ footer { border-top: 1px solid var(--line); background: #fff; }
   .safe { margin: 0 20px 72px; padding: 24px; }
 }
 
+/* Minimal white treatment: structure comes from spacing and rules, not colored panels. */
+body { background: #fff; }
+#how.section { background: transparent; }
+#how.section .how-grid { background: transparent; }
+#how.section .how-card,
+#how.section .how-card:nth-child(2),
+#how.section .how-card:nth-child(4) { background: transparent; }
+#how.section .how-card:nth-child(2) { border-top-color: #9bb2d0; }
+
 /* Second pass: turn the service cards into one readable journey. */
 #how.section {
   max-width: 1160px;
