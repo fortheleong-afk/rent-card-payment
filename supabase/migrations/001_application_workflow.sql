@@ -31,10 +31,16 @@ drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile" on public.profiles for select using (id = auth.uid());
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" on public.profiles for update using (id = auth.uid()) with check (id = auth.uid());
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin');
+$$;
 drop policy if exists "Admins can view profiles" on public.profiles;
-create policy "Admins can view profiles" on public.profiles for select using (
-  exists (select 1 from public.profiles admin_profile where admin_profile.id = auth.uid() and admin_profile.role = 'admin')
-);
+create policy "Admins can view profiles" on public.profiles for select using (public.is_admin());
 
 create or replace function public.handle_new_user_profile()
 returns trigger
