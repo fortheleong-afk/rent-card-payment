@@ -1,0 +1,29 @@
+.info-page { min-height: 100vh; background: #f8fafc; }
+.info-main { width: min(900px, calc(100% - 40px)); margin: 0 auto; padding: 78px 0 110px; }
+.info-kicker { color: var(--blue); font: 800 10px Manrope, sans-serif; letter-spacing: .14em; }
+.info-main h1 { color: var(--navy); font-size: clamp(34px, 5vw, 56px); letter-spacing: -.07em; line-height: 1.08; margin: 14px 0 18px; }
+.info-lead { max-width: 620px; color: var(--muted); font-size: 15px; line-height: 1.8; margin: 0 0 44px; }
+.info-panel { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.info-row { display: grid; grid-template-columns: 190px 1fr; gap: 24px; padding: 25px 28px; border-bottom: 1px solid var(--line); }
+.info-row:last-child { border-bottom: 0; }
+.info-row h2 { color: var(--navy); font-size: 16px; line-height: 1.35; margin: 0; }
+.info-row p, .info-row li { color: var(--muted); font-size: 13px; line-height: 1.75; }
+.info-row p { margin: 0; }
+.info-row ul { margin: 0; padding-left: 18px; }
+.info-note { display: flex; gap: 12px; align-items: flex-start; background: #edf5ff; border: 1px solid #d7e7ff; color: #587294; border-radius: 10px; padding: 16px 18px; margin-top: 22px; font-size: 12px; line-height: 1.7; }
+.info-note strong { display: block; color: var(--navy); margin-bottom: 3px; }
+.contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.contact-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+.contact-card h2 { color: var(--navy); font-size: 16px; margin: 0 0 9px; }
+.contact-card p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0; }
+.contact-card a { color: var(--blue); font-weight: 700; text-decoration: none; }
+.info-back { display: inline-flex; align-items: center; gap: 6px; color: var(--blue); font-size: 12px; font-weight: 700; text-decoration: none; margin-bottom: 40px; }
+.info-header { background: #fff; border-bottom: 1px solid var(--line); }
+.info-header .nav { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+@media (max-width: 700px) {
+  .info-main { width: calc(100% - 36px); padding: 52px 0 80px; }
+  .info-row { display: block; padding: 21px 19px; }
+  .info-row h2 { margin-bottom: 8px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .info-header .nav { width: calc(100% - 36px); }
+}
