@@ -7,4 +7,4 @@ import './review.css';
 import './taste-overrides.css';
 
 export const metadata: Metadata = { title: 'Divercity Pay | Rent by Card', description: 'A secure test-mode rent payment service for tenants.' };
-export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="ko"><body>{children}</body></html>; }
+export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="en"><body>{children}</body></html>; }
