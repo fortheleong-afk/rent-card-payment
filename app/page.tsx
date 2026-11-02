@@ -18,6 +18,7 @@ export default function Home() {
   const next = async () => {
     setMessage('');
     if (step === 0 && !file) { setMessage('계약서 파일을 먼저 올려주세요.'); return; }
+    if (step === 1 && (!rent || rent <= 0 || !address.trim())) { setMessage('월세 금액과 임대차계약서의 주소를 모두 입력해주세요.'); return; }
     if (step === 2 && (!bank || !account || !landlordName)) { setMessage('은행, 계좌번호, 예금주를 모두 입력해주세요.'); return; }
     if (step < 3) { setStep(step + 1); return; }
     const { data: { user } } = await supabase.auth.getUser();
