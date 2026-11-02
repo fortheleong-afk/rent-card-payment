@@ -94,18 +94,18 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare changed boolean;
+declare affected integer;
 begin
   update public.rent_applications
   set status = 'cancelled', cancelled_at = now()
   where id = p_application_id and user_id = auth.uid() and status = 'pending_review';
-  get diagnostics changed = row_count > 0;
-  if changed then
+  get diagnostics affected = row_count;
+  if affected > 0 then
     insert into public.application_status_history(application_id, from_status, to_status, changed_by, reason)
     select id, 'pending_review', 'cancelled', auth.uid(), '사용자 취소'
     from public.rent_applications where id = p_application_id;
   end if;
-  return changed;
+  return affected > 0;
 end;
 $$;
 revoke all on function public.cancel_rent_application(uuid) from public;
