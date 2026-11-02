@@ -166,6 +166,18 @@ body { background: #fff; }
 #how.section .how-card:nth-child(4) { background: transparent; }
 #how.section .how-card:nth-child(2) { border-top-color: #9bb2d0; }
 
+/* Final override for cached/legacy panel rules. */
+body, main, #how.section, #how.section .how-grid,
+#how.section .how-card,
+#how.section .how-card:nth-child(2),
+#how.section .how-card:nth-child(4) {
+  background: #fff !important;
+}
+#how.section {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
 /* Second pass: turn the service cards into one readable journey. */
 #how.section {
   max-width: 1160px;
