@@ -30,10 +30,13 @@ export default function Home() {
     const { data: application, error } = await supabase.from('rent_applications').insert({ user_id: user.id, application_number: number, rent_amount: rent, service_fee: fee, total_amount: total, landlord_name: landlordName, landlord_bank: bank, landlord_account: account, property_address: address, status: 'pending_review', test_payment_status: 'approved', submitted_at: new Date().toISOString() }).select('id').single();
     if (error || !application) { setLoading(false); setMessage('신청 저장에 실패했습니다.'); return; }
     const path = `${user.id}/${application.id}/${file.name}`; const { error: uploadError } = await supabase.storage.from('contract-documents').upload(path, file, { contentType: file.type, upsert: false });
-    if (uploadError) { await supabase.from('rent_applications').delete().eq('id', application.id); setLoading(false); setMessage('계약서 업로드에 실패했습니다.'); return; }
-    await supabase.from('rent_applications').update({ contract_file_path: path, contract_file_name: file.name, contract_file_size: file.size }).eq('id', application.id);
-    await supabase.from('application_status_history').insert({ application_id: application.id, to_status: 'pending_review', changed_by: user.id, reason: '메인 페이지 신청 접수' });
-    await supabase.from('notifications').insert({ user_id: user.id, application_id: application.id, title: '월세 신청이 접수되었습니다', message: `${number} 신청을 접수했습니다.`, type: 'application' });
+    if (uploadError) { await supabase.from('rent_applications').delete().eq('id', application.id); setLoading(false); setMessage(`계약서 업로드에 실패했습니다: ${uploadError.message}`); return; }
+    const { error: updateError } = await supabase.from('rent_applications').update({ contract_file_path: path, contract_file_name: file.name, contract_file_size: file.size }).eq('id', application.id).eq('user_id', user.id);
+    if (updateError) { await supabase.storage.from('contract-documents').remove([path]); await supabase.from('rent_applications').delete().eq('id', application.id); setLoading(false); setMessage(`신청 파일 정보 저장에 실패했습니다: ${updateError.message}`); return; }
+    const { error: historyError } = await supabase.from('application_status_history').insert({ application_id: application.id, to_status: 'pending_review', changed_by: user.id, reason: '메인 페이지 신청 접수' });
+    if (historyError) { setLoading(false); setMessage(`신청은 저장됐지만 이력 저장에 실패했습니다: ${historyError.message}`); return; }
+    const { error: notificationError } = await supabase.from('notifications').insert({ user_id: user.id, application_id: application.id, title: '월세 신청이 접수되었습니다', message: `${number} 신청을 접수했습니다.`, type: 'application' });
+    if (notificationError) { setLoading(false); setMessage(`신청은 저장됐지만 알림 저장에 실패했습니다: ${notificationError.message}`); return; }
     setApplicationNumber(number); setLoading(false); setDone(true);
   };
   return <main>
