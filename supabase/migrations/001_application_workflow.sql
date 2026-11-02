@@ -76,6 +76,10 @@ drop policy if exists "Users can view own contracts" on storage.objects;
 create policy "Users can view own contracts" on storage.objects for select to authenticated
 using (bucket_id = 'contract-documents' and (storage.foldername(name))[1] = auth.uid()::text);
 
+drop policy if exists "Admins can view contracts" on storage.objects;
+create policy "Admins can view contracts" on storage.objects for select to authenticated
+using (bucket_id = 'contract-documents' and exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+
 -- 기존 데이터에 신청번호가 없는 경우를 위한 일괄 생성
 update public.rent_applications
 set application_number = 'DP-' || to_char(created_at, 'YYYYMMDD') || '-' || upper(substr(replace(id::text, '-', ''), 1, 6))
