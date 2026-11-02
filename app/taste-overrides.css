@@ -171,6 +171,19 @@ footer { border-top: 1px solid var(--line); background: #fff; }
   animation: divercity-rise .65s both;
 }
 
+/* Safety fallback: content must remain visible even if an observer is unavailable. */
+#how.section .how-card,
+#how.section .how-card:nth-child(2),
+#how.section .how-card:nth-child(4) {
+  opacity: 1;
+  transform: none;
+}
+#how.section .how-card.is-visible,
+#how.section .how-card:nth-child(2).is-visible,
+#how.section .how-card:nth-child(4).is-visible {
+  animation: divercity-rise .65s both;
+}
+
 /* Minimal white treatment: structure comes from spacing and rules, not colored panels. */
 body { background: #fff; }
 #how.section { background: transparent; }
@@ -428,4 +441,18 @@ header { position: sticky; top: 0; z-index: 20; }
   #how.section .how-card,
   #how.section .how-card:nth-child(2),
   #how.section .how-card:nth-child(4) { min-height: 92px; padding: 14px 0; }
+}
+
+/* Final safety fallback: cards must stay readable if scroll observation is delayed. */
+#how.section .how-card,
+#how.section .how-card:nth-child(2),
+#how.section .how-card:nth-child(4) {
+  opacity: 1;
+  transform: none;
+}
+
+#how.section .how-card.is-visible,
+#how.section .how-card:nth-child(2).is-visible,
+#how.section .how-card:nth-child(4).is-visible {
+  animation: divercity-rise .65s both;
 }
