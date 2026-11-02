@@ -235,6 +235,44 @@ main > footer.is-visible,
   }
 }
 
+/* Explicit motion-ready state makes the entrance effect reliable after hydration. */
+html.motion-ready main > section,
+html.motion-ready main > footer,
+html.motion-ready .hero-card,
+html.motion-ready .numbers > div,
+html.motion-ready .how-card,
+html.motion-ready .faq-list details {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+html.motion-ready main > section.is-visible,
+html.motion-ready main > footer.is-visible,
+html.motion-ready .hero-card.is-visible,
+html.motion-ready .numbers > div.is-visible,
+html.motion-ready .how-card.is-visible,
+html.motion-ready .faq-list details.is-visible {
+  animation: divercity-scroll-in .78s cubic-bezier(.22, 1, .36, 1) var(--reveal-delay, 0ms) both;
+}
+
+@keyframes divercity-scroll-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.motion-ready main > section,
+  html.motion-ready main > footer,
+  html.motion-ready .hero-card,
+  html.motion-ready .numbers > div,
+  html.motion-ready .how-card,
+  html.motion-ready .faq-list details {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+}
+
 /* Safety fallback: content must remain visible even if an observer is unavailable. */
 #how.section .how-card,
 #how.section .how-card:nth-child(2),
