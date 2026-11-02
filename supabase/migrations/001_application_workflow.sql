@@ -8,7 +8,10 @@ alter table public.rent_applications
   add column if not exists contract_end_date date,
   add column if not exists contract_file_name text,
   add column if not exists contract_file_size integer,
-  add column if not exists submitted_at timestamptz;
+  add column if not exists submitted_at timestamptz,
+  add column if not exists rejection_reason text,
+  add column if not exists cancelled_at timestamptz,
+  add column if not exists test_payment_status text default 'not_started';
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
