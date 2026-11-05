@@ -48,7 +48,8 @@ export default function NewApplication() {
     const { data: profileData } = await supabase.from('profiles').select('full_name,phone').eq('id', userId).maybeSingle();
     const { data: application, error: insertError } = await supabase.from('rent_applications').insert({ user_id: userId, application_number: applicationNumber, applicant_name: profileData?.full_name ?? null, applicant_email: applicantEmail, applicant_phone: profileData?.phone ?? null, rent_amount: rent, service_fee: fee, total_amount: rent + fee, landlord_name: landlordName, landlord_bank: bank, landlord_account: account, property_address: address, contract_start_date: contractStart, contract_end_date: contractEnd, status: 'pending_review', submitted_at: new Date().toISOString() }).select('id').single();
     if (insertError || !application) { setLoading(false); setMessage('Could not save your application. Please contact support.'); return; }
-    const path = `${userId}/${application.id}/${file.name}`;
+    const extension = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
+    const path = `${userId}/${application.id}/${crypto.randomUUID()}.${extension}`;
     const { error: uploadError } = await supabase.storage.from('contract-documents').upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) { await supabase.from('rent_applications').delete().eq('id', application.id); fail(`계약서 업로드에 실패했습니다: ${uploadError.message}`); return; }
     const { error: updateError } = await supabase.from('rent_applications').update({ contract_file_path: path, contract_file_name: file.name, contract_file_size: file.size }).eq('id', application.id).eq('user_id', userId);
