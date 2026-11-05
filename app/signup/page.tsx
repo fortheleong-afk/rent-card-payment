@@ -15,15 +15,15 @@ export default function Signup() {
 
   const signup = async () => {
     if (!email || !password || !name || !phone) {
-      setMessage('이름, 전화번호, 이메일, 비밀번호를 모두 입력해주세요.');
+      setMessage('Please enter your name, contact phone, email and password.');
       return;
     }
     if (password.length < 6) {
-      setMessage('비밀번호는 6자 이상이어야 합니다.');
+      setMessage('Your password must be at least 6 characters.');
       return;
     }
-    if (!/^[+0-9][0-9 ()-]{7,20}$/.test(phone)) {
-      setMessage('전화번호 형식을 확인해주세요.');
+    if (!/^\+?[0-9][0-9 ()-]{5,23}$/.test(phone.trim()) || phone.replace(/\D/g, '').length < 7 || phone.replace(/\D/g, '').length > 15) {
+      setMessage('Enter a valid contact number, including the country code if applicable.');
       return;
     }
     setLoading(true);
@@ -35,20 +35,20 @@ export default function Signup() {
     });
     setLoading(false);
     if (error) {
-      setMessage(error.message.includes('already registered') ? '이미 가입된 이메일입니다.' : '회원가입에 실패했습니다.');
+      setMessage(error.message.includes('already registered') ? 'This email is already registered.' : 'Could not create your account. Please try again.');
       return;
     }
     if (data.session) window.location.href = '/';
-    else setMessage('회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.');
+    else setMessage('Account created. If email verification is enabled, check your inbox before logging in.');
   };
 
   return <main className="auth-page"><div className="auth-box">
     <Link href="/" className="brand"><span className="logo">D</span><span>Divercity <span>Pay</span></span></Link>
     <h1>Create account</h1><p>Start your rent payment journey.</p>
-    <label>이름<input value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" /></label>
-    <label>전화번호<input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+82 10-1234-5678" /></label>
-    <label>이메일<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>
-    <label>비밀번호<input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 6 characters" /></label>
+    <label>Full name<input value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" /></label>
+    <label>Contact phone<input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+82 10-1234-5678" /><small>International numbers are accepted. This is a contact number, not identity verification.</small></label>
+    <label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>
+    <label>Password<input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 6 characters" /></label>
     {message && <p className="auth-message">{message}</p>}
     <button className="primary full" onClick={signup} disabled={loading}>{loading ? 'Creating account...' : 'Create account'}</button>
     <div className="auth-help"><span>Already have an account?</span><Link href="/login">Log in</Link></div>

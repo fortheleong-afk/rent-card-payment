@@ -27,7 +27,7 @@ export default function ProfilePage() {
   }, []);
 
   const save = async () => {
-    if (!name.trim() || !phone.trim() || !/^[+0-9][0-9 ()-]{7,20}$/.test(phone)) {
+    if (!name.trim() || !/^\+?[0-9][0-9 ()-]{5,23}$/.test(phone.trim()) || phone.replace(/\D/g, '').length < 7 || phone.replace(/\D/g, '').length > 15) {
       setMessage('이름과 올바른 전화번호를 입력해주세요.');
       return;
     }
