@@ -1,0 +1,19 @@
+.page{min-height:100vh;background:#f7f9fc;color:#182537;padding:28px 20px 80px}
+.shell{max-width:840px;margin:0 auto}
+.nav{display:flex;justify-content:space-between;gap:20px;padding:12px 0 32px;border-bottom:1px solid #dfe6ef;font-size:13px;color:#51647f}
+.nav a,.page a{color:#2459b4;text-underline-offset:3px}
+.page h1{font-size:clamp(25px,4vw,32px);color:#162d4d;margin:38px 0 12px}
+.lead{font-size:16px;line-height:1.6;margin:0 0 16px}
+.note{font-size:13px;line-height:1.8;color:#51647f;margin:0 0 28px;max-width:70ch}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:30px 0 18px}
+.actions button{border:1px solid #2459b4;background:#2459b4;color:#fff;border-radius:6px;padding:12px 17px;font:700 13px 'Noto Sans KR',sans-serif;cursor:pointer}
+.actions button:disabled{opacity:.55;cursor:wait}
+.actions .danger{background:#fff;border-color:#b83a40;color:#a92c33}
+.message{border:1px solid #c8d8ec;background:#eef5ff;padding:13px 15px;border-radius:6px;font-size:13px;line-height:1.6}
+.results{border:1px solid #dfe6ef;background:#fff;border-radius:8px;padding:22px;margin-top:24px}
+.results h2{font-size:16px;margin:0 0 18px}.results h2 span{font-size:12px;font-weight:500;color:#51647f}
+.results p{font-size:13px;color:#51647f}.results ul{list-style:none;margin:0;padding:0}
+.results li{display:flex;justify-content:space-between;gap:16px;border-top:1px solid #e7ebf1;padding:13px 0;font-size:12px}
+.file{font-family:ui-monospace,monospace;overflow-wrap:anywhere}.results time{color:#51647f;white-space:nowrap}
+.page :is(button,a):focus-visible{outline:3px solid #2b6ef3;outline-offset:3px}
+@media(max-width:600px){.nav{flex-direction:column;gap:6px}.results li{flex-direction:column;gap:4px}.results time{white-space:normal}}
