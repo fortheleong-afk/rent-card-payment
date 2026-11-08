@@ -50,6 +50,8 @@
 .application-form .review-list dt { color: #526783; font-size: 13px; }
 .application-form .review-list dd { margin: 0; color: #172e54; font-weight: 650; overflow-wrap: anywhere; }
 .application-disclosure { padding: 15px; margin: 0; background: #eef5ff; border-radius: 8px; color: #2b4d76; font-size: 13px; line-height: 1.6; }
+.application-form .review-confirm { display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; cursor: pointer; }
+.application-form .review-confirm input[type='checkbox'] { flex: 0 0 19px; width: 19px; min-height: 19px; height: 19px; margin: 1px 0 0; accent-color: #2b6ef3; }
 .application-form .application-error { margin: 20px 0 0; color: #a61b18; overflow-wrap: anywhere; }
 .application-error a { color: #124ab4; font-weight: 700; }
 .application-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 680px; margin-top: 32px; }
