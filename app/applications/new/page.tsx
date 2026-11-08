@@ -30,6 +30,7 @@ export default function NewApplication() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [uncertain, setUncertain] = useState(false);
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [complete, setComplete] = useState('');
   const attempt = useRef<Attempt | null>(null);
   const submitting = useRef(false);
@@ -94,6 +95,7 @@ export default function NewApplication() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (step !== STEPS.length - 1 || submitting.current || !userId || !file) return;
+    if (!reviewConfirmed) { setMessage('Confirm the details before submitting.'); return; }
     if (![0, 1, 2].every(validate)) {
       setMessage('Some details need attention. Go back and review your application.');
       return;
@@ -236,14 +238,15 @@ export default function NewApplication() {
               <div><dt>Deposit account</dt><dd>{bank} · {maskAccount(account)}</dd></div>
             </dl>
             <p className="application-disclosure">By submitting, you send these details and the contract to Divercity Pay for a test review. No payment or transfer is made.</p>
+            <label className="review-confirm"><input type="checkbox" checked={reviewConfirmed} onChange={event => { setReviewConfirmed(event.target.checked); setMessage(''); }}/><span>I have checked these details and want to submit this test application.</span></label>
           </div>}
         </fieldset>
         {message && <p className="auth-message application-error" role="alert">{message}{message.includes('Profile') && <> <Link href="/profile">Open Profile</Link></>}</p>}
         <div className="application-actions">
-          {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading} onClick={() => { setMessage(''); setErrors({}); setStep(current => current - 1); }}>Back</button>}
+          {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading} onClick={() => { setMessage(''); setErrors({}); setReviewConfirmed(false); setStep(current => current - 1); }}>Back</button>}
           {step < STEPS.length - 1
             ? <button type="button" className="primary" onClick={nextStep}>Continue <ArrowRight size={16}/></button>
-            : <button type="submit" className="primary" disabled={loading || !userId}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
+            : <button type="submit" className="primary" disabled={loading || !userId || !reviewConfirmed}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
         </div>
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
       </form>
