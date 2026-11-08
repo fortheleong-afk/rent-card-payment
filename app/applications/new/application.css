@@ -57,6 +57,7 @@
 .application-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 680px; margin-top: 32px; }
 .application-actions > .primary { margin-left: auto; }
 .application-actions button { min-height: 48px; margin-top: 0; }
+.application-actions button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
 .application-status-link { display: inline-block; margin-top: 14px; color: #1554bb; font-weight: 700; }
 .application-complete { max-width: 680px; margin: 35px auto; }
 .application-complete h1 { margin: 18px 0 8px; color: #172e54; }
