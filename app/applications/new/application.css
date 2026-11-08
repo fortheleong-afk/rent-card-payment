@@ -1,43 +1,69 @@
+.application-shell { max-width: 860px; }
+.application-shell .dashboard-heading { margin-bottom: 24px; }
+.application-shell .dashboard-heading h1 { line-height: 1.2; }
+.application-steps {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
+  padding: 0; margin: 30px 0 18px; list-style: none;
+}
+.application-steps li {
+  display: flex; align-items: center; gap: 9px; min-width: 0;
+  padding: 12px 8px; border-bottom: 2px solid #dce5f1;
+  color: #526783; font-size: 12px; font-weight: 600;
+}
+.application-steps li.current { border-color: #2b6ef3; color: #142d51; }
+.application-steps li.done { border-color: #72a1fa; color: #2558ab; }
+.application-steps .step-number {
+  display: grid; flex: 0 0 25px; width: 25px; height: 25px; place-items: center;
+  border-radius: 50%; background: #e9eff7; color: #35516e; font: 700 12px Manrope, sans-serif;
+}
+.application-steps li.current .step-number { background: #2b6ef3; color: #fff; }
+.application-steps li.done .step-number { background: #e6efff; color: #2558ab; }
 .application-form.detail-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 20px;
-  max-width: 720px;
+  display: block; width: 100%; max-width: none; padding: 30px;
 }
-.application-form label {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-  color: #172e54;
-  font-size: 14px;
-  font-weight: 650;
-}
-.application-form label input,
-.application-form label select {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  min-height: 48px;
-  padding: 11px 12px;
-  border: 1px solid #cbd9ea;
-  border-radius: 8px;
-  background: #fff;
-  color: #172e54;
-  font: inherit;
-  font-size: 16px;
+.application-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.application-form .step-content { display: grid; gap: 22px; max-width: 680px; }
+.application-form .step-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 6px; color: #2b6ef3; }
+.application-form .step-heading h2 { margin: 0 0 6px; color: #172e54; font-size: 21px; line-height: 1.3; }
+.application-form .step-heading p { margin: 0; color: #526783; font-size: 13px; line-height: 1.6; }
+.application-form label { display: grid; gap: 8px; min-width: 0; color: #172e54; font-size: 14px; font-weight: 650; }
+.application-form .required { display: inline; color: #526783; font-size: 12px; font-weight: 500; }
+.application-form label input, .application-form label select {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px;
+  padding: 11px 12px; border: 1px solid #c1d0e3; border-radius: 8px;
+  background: #fff; color: #172e54; font: inherit; font-size: 16px;
 }
 .application-form input[type='file'] { padding: 10px; }
-.application-form label small { color: #526a89; font-size: 12px; font-weight: 400; overflow-wrap: anywhere; }
-.application-form input:focus-visible,.application-form select:focus-visible { outline: 2px solid #326cf0; outline-offset: 2px; }
-.application-form.detail-card > .form-summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  padding: 16px;
-  border: 0;
-  border-radius: 8px;
-  background: #f3f7fc;
-  font-size: 14px;
+.application-form label small { color: #526783; font-size: 12px; font-weight: 400; overflow-wrap: anywhere; }
+.application-form .field-error { color: #a61b18; font-weight: 600; }
+.application-form [aria-invalid='true'] { border-color: #b42318; }
+.application-form input:focus-visible, .application-form select:focus-visible, .application-form button:focus-visible, .application-form a:focus-visible {
+  outline: 2px solid #326cf0; outline-offset: 2px;
 }
-.application-form .auth-message { margin: 0; color: #b42318; overflow-wrap: anywhere; }
-.application-form button { min-height: 48px; }
+.application-form .field-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.application-form .form-summary {
+  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px;
+  padding: 17px; border-radius: 8px; background: #f3f7fc; font-size: 14px;
+}
+.application-form .review-list { margin: 0; }
+.application-form .review-list div { display: grid; grid-template-columns: 160px minmax(0,1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid #e1e9f3; }
+.application-form .review-list dt { color: #526783; font-size: 13px; }
+.application-form .review-list dd { margin: 0; color: #172e54; font-weight: 650; overflow-wrap: anywhere; }
+.application-disclosure { padding: 15px; margin: 0; background: #eef5ff; border-radius: 8px; color: #2b4d76; font-size: 13px; line-height: 1.6; }
+.application-form .application-error { margin: 20px 0 0; color: #a61b18; overflow-wrap: anywhere; }
+.application-error a { color: #124ab4; font-weight: 700; }
+.application-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 680px; margin-top: 32px; }
+.application-actions > .primary { margin-left: auto; }
+.application-actions button { min-height: 48px; margin-top: 0; }
+.application-status-link { display: inline-block; margin-top: 14px; color: #1554bb; font-weight: 700; }
+.application-complete { max-width: 680px; margin: 35px auto; }
+.application-complete h1 { margin: 18px 0 8px; color: #172e54; }
+.application-complete p { line-height: 1.6; }
+@media(max-width: 600px) {
+  .application-form.detail-card { padding: 22px 18px; }
+  .application-steps { gap: 3px; }
+  .application-steps li { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 3px; font-size: 10px; line-height: 1.25; }
+  .application-form .field-pair { grid-template-columns: 1fr; }
+  .application-form .review-list div { grid-template-columns: 1fr; gap: 5px; }
+  .application-actions button { flex: 1; }
+}
