@@ -80,6 +80,13 @@ export default function NewApplication() {
     setErrors(next);
     if (Object.keys(next).length) {
       setMessage('Please correct the highlighted fields before continuing.');
+      const firstField = Object.keys(next)[0] as Field;
+      const inputId: Record<Field, string> = {
+        file: 'lease-file', address: 'property-address', contractStart: 'lease-start',
+        contractEnd: 'lease-end', rent: 'monthly-rent', landlordName: 'landlord-name',
+        bank: 'landlord-bank', account: 'account-number',
+      };
+      requestAnimationFrame(() => document.getElementById(inputId[firstField])?.focus());
       return false;
     }
     setMessage('');
@@ -186,9 +193,10 @@ export default function NewApplication() {
       <Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> My dashboard</Link>
       <div className="dashboard-heading"><div><h1>Apply for rent payment</h1><p>Complete the four steps below to send a test application for review.</p></div></div>
       <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>Test mode</strong><span>Your contract is stored privately. No card payment or bank transfer will occur.</span></div></div>
+      <p className="application-mobile-progress">Step {step + 1} of {STEPS.length} <strong>{STEPS[step]}</strong></p>
       <ol className="application-steps" aria-label="Application progress">{STEPS.map((label, index) =>
         <li key={label} className={index === step ? 'current' : index < step ? 'done' : ''} aria-current={index === step ? 'step' : undefined}>
-          <span className="step-number">{index < step ? <Check size={14}/> : index + 1}</span><span>{label}</span>
+          <span className="step-number">{index < step ? <Check size={14}/> : index + 1}</span><span className="step-label">{label}</span>
         </li>)}</ol>
       <form className="application-form detail-card" onSubmit={submit} noValidate>
         <fieldset disabled={loading || uncertain}>
@@ -246,7 +254,7 @@ export default function NewApplication() {
           {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading} onClick={() => { setMessage(''); setErrors({}); setReviewConfirmed(false); setStep(current => current - 1); }}>Back</button>}
           {step < STEPS.length - 1
             ? <button type="button" className="primary" onClick={nextStep}>Continue <ArrowRight size={16}/></button>
-            : <button type="submit" className="primary" disabled={loading || !userId || !reviewConfirmed}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
+            : <button type="submit" className="primary" disabled={loading || !userId}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
         </div>
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
       </form>
