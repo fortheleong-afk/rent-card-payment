@@ -1,17 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import { ArrowLeft, Check, FileText, ShieldCheck } from 'lucide-react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, Check, FileText, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import './application.css';
 
+const STEPS = ['Lease contract', 'Rent details', 'Deposit account', 'Review & submit'];
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const VALID_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const money = (value: number) => `₩${new Intl.NumberFormat('ko-KR').format(value)}`;
-const makeNumber = () => `DP-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+const maskAccount = (value: string) => value ? `••••${value.replace(/\D/g, '').slice(-4)}` : '—';
+
+type Field = 'file' | 'address' | 'contractStart' | 'contractEnd' | 'rent' | 'landlordName' | 'bank' | 'account';
+type Attempt = { id: string; path: string; uploaded: boolean };
 
 export default function NewApplication() {
+  const [step, setStep] = useState(0);
   const [userId, setUserId] = useState('');
-  const [rent, setRent] = useState(750000);
+  const [rent, setRent] = useState('750000');
   const [landlordName, setLandlordName] = useState('');
   const [bank, setBank] = useState('');
   const [account, setAccount] = useState('');
@@ -19,48 +26,227 @@ export default function NewApplication() {
   const [contractStart, setContractStart] = useState('');
   const [contractEnd, setContractEnd] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
   const [complete, setComplete] = useState('');
-  const fee = 0; // Storage placeholder for the test flow; the future fee is undecided.
+  const attempt = useRef<Attempt | null>(null);
+  const submitting = useRef(false);
 
-  useEffect(() => { supabase.auth.getSession().then(({ data }) => { if (!data.session) window.location.href = '/login'; else setUserId(data.session.user.id); }); }, []);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) window.location.href = '/login?next=/applications/new';
+      else setUserId(data.session.user.id);
+    });
+  }, []);
+
+  const clearError = (field: Field) => {
+    setErrors(previous => ({ ...previous, [field]: undefined }));
+    setMessage('');
+  };
 
   const chooseFile = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
-    if (selected && (!['application/pdf', 'image/jpeg', 'image/png'].includes(selected.type) || selected.size > 10 * 1024 * 1024)) { setMessage('Please upload a PDF, JPG or PNG file up to 10MB.'); return; }
-    setMessage(''); setFile(selected);
+    if (!selected || !VALID_TYPES.includes(selected.type) || selected.size < 1 || selected.size > MAX_FILE_BYTES) {
+      setFile(null);
+      setErrors(previous => ({ ...previous, file: 'Choose a PDF, JPG or PNG file between 1 byte and 10 MB.' }));
+      event.target.value = '';
+      return;
+    }
+    setFile(selected);
+    clearError('file');
   };
 
-  const fail = (text: string) => { setLoading(false); setMessage(text); };
+  const validate = (current: number): boolean => {
+    const next: Partial<Record<Field, string>> = {};
+    if (current === 0 && !file) next.file = 'Upload your lease contract to continue.';
+    if (current === 1) {
+      if (!address.trim()) next.address = 'Enter the property address shown on your lease.';
+      else if (address.trim().length > 500) next.address = 'Use 500 characters or fewer.';
+      if (!contractStart) next.contractStart = 'Enter the lease start date.';
+      if (!contractEnd || (contractStart && contractEnd < contractStart)) next.contractEnd = 'Enter an end date on or after the start date.';
+      const amount = Number(rent);
+      if (!rent || !Number.isSafeInteger(amount) || amount < 1 || amount > 1000000000) next.rent = 'Enter a whole amount from ₩1 to ₩1,000,000,000.';
+    }
+    if (current === 2) {
+      if (!landlordName.trim()) next.landlordName = "Enter the landlord's name as shown on the account.";
+      else if (landlordName.trim().length > 120) next.landlordName = 'Use 120 characters or fewer.';
+      if (!bank.trim()) next.bank = 'Select the deposit bank.';
+      const digits = account.replace(/[ -]/g, '');
+      if (!/^[0-9]{6,30}$/.test(digits)) next.account = 'Enter 6–30 digits. Spaces and hyphens are allowed.';
+    }
+    setErrors(next);
+    if (Object.keys(next).length) {
+      setMessage('Please correct the highlighted fields before continuing.');
+      return false;
+    }
+    setMessage('');
+    return true;
+  };
+
+  const nextStep = () => {
+    if (!validate(step)) return;
+    setStep(current => Math.min(current + 1, STEPS.length - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!file || !landlordName || !bank || !account || !address) { setMessage('Please enter the lease, address and landlord account details.'); return; }
-    if (!contractStart || !contractEnd || contractEnd < contractStart) { setMessage('Enter a valid lease start and end date.'); return; }
-    if (!Number.isSafeInteger(rent) || rent <= 0) { setMessage('Enter a rent amount greater than zero.'); return; }
-    setLoading(true); setMessage('');
-    const { data: profile } = await supabase.from('profiles').select('full_name,phone').eq('id', userId).maybeSingle();
-    if (!profile?.phone) { setLoading(false); setMessage('Please add a contact phone number in your profile before applying.'); return; }
-    const applicationNumber = makeNumber();
-    const { data: sessionData } = await supabase.auth.getSession();
-    const applicantEmail = sessionData.session?.user.email ?? null;
-    const { data: profileData } = await supabase.from('profiles').select('full_name,phone').eq('id', userId).maybeSingle();
-    const { data: application, error: insertError } = await supabase.from('rent_applications').insert({ user_id: userId, application_number: applicationNumber, applicant_name: profileData?.full_name ?? null, applicant_email: applicantEmail, applicant_phone: profileData?.phone ?? null, rent_amount: rent, service_fee: fee, total_amount: rent + fee, landlord_name: landlordName, landlord_bank: bank, landlord_account: account, property_address: address, contract_start_date: contractStart, contract_end_date: contractEnd, status: 'pending_review', submitted_at: new Date().toISOString() }).select('id').single();
-    if (insertError || !application) { setLoading(false); setMessage('Could not save your application. Please contact support.'); return; }
-    const extension = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
-    const path = `${userId}/${application.id}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await supabase.storage.from('contract-documents').upload(path, file, { contentType: file.type, upsert: false });
-    if (uploadError) { await supabase.from('rent_applications').delete().eq('id', application.id); fail(`계약서 업로드에 실패했습니다: ${uploadError.message}`); return; }
-    const { error: updateError } = await supabase.from('rent_applications').update({ contract_file_path: path, contract_file_name: file.name, contract_file_size: file.size }).eq('id', application.id).eq('user_id', userId);
-    if (updateError) { await supabase.storage.from('contract-documents').remove([path]); await supabase.from('rent_applications').delete().eq('id', application.id); fail(`신청 파일 정보 저장에 실패했습니다: ${updateError.message}`); return; }
-    const { error: historyError } = await supabase.from('application_status_history').insert({ application_id: application.id, to_status: 'pending_review', changed_by: userId, reason: '신청 접수' });
-    if (historyError) { fail(`신청 이력 저장에 실패했습니다: ${historyError.message}`); return; }
-    const { error: notificationError } = await supabase.from('notifications').insert({ user_id: userId, application_id: application.id, title: '월세 신청이 접수되었습니다', message: `${applicationNumber} 신청을 접수했습니다.`, type: 'application' });
-    if (notificationError) { fail(`신청은 저장됐지만 알림 저장에 실패했습니다: ${notificationError.message}`); return; }
-    setLoading(false); setComplete(applicationNumber);
+    if (step !== STEPS.length - 1 || submitting.current || !userId || !file) return;
+    if (![0, 1, 2].every(validate)) {
+      setMessage('Some details need attention. Go back and review your application.');
+      return;
+    }
+    submitting.current = true;
+    setLoading(true);
+    setMessage('');
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || authData.user?.id !== userId) throw new Error('Your session expired. Sign in again and retry.');
+      const { data: profile, error: profileError } = await supabase.from('profiles')
+        .select('full_name,phone').eq('id', userId).maybeSingle();
+      if (profileError) throw new Error('We could not verify your profile. Try again.');
+      if (!profile?.full_name?.trim() || !profile?.phone?.trim()) {
+        throw new Error('Add your name and contact number in Profile before submitting.');
+      }
+
+      if (!attempt.current) {
+        const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+        const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+        const extension = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
+        const id = crypto.randomUUID();
+        attempt.current = { id, path: `${userId}/${id}/${hash}.${extension}`, uploaded: false };
+      }
+      const pending = attempt.current;
+      if (!pending.uploaded) {
+        const { error: uploadError } = await supabase.storage.from('contract-documents')
+          .upload(pending.path, file, { contentType: file.type, upsert: false });
+        if (uploadError && !/already exists|duplicate/i.test(uploadError.message)) {
+          // A network failure can happen after Storage accepted the file.
+          // Reuse the exact same path on retry to avoid an orphaned second copy.
+          setUncertain(true);
+          throw new Error(`We could not confirm the contract upload. Retry this submission. (${uploadError.message})`);
+        }
+        pending.uploaded = true;
+      }
+
+      const { data: applicationNumber, error: submitError } = await supabase.rpc('submit_rent_application', {
+        p_request_id: pending.id,
+        p_property_address: address.trim(),
+        p_contract_start_date: contractStart,
+        p_contract_end_date: contractEnd,
+        p_rent_amount: Number(rent),
+        p_landlord_name: landlordName.trim(),
+        p_landlord_bank: bank,
+        p_landlord_account: account.trim(),
+        p_contract_file_path: pending.path,
+        p_contract_file_name: file.name,
+      });
+      if (submitError || !applicationNumber) {
+        if (submitError?.code === '22023' || submitError?.code === '42501') {
+          const { error: cleanupError } = await supabase.storage.from('contract-documents').remove([pending.path]);
+          if (!cleanupError) attempt.current = null;
+          setUncertain(Boolean(cleanupError));
+          throw new Error(submitError.message);
+        }
+        // A timeout can occur after the database commits. Keep this ID and file
+        // for an identical retry instead of creating a second application.
+        setUncertain(true);
+        throw new Error('We could not confirm your submission. Check your dashboard, then retry here with the same submission ID. Do not start a new application yet.');
+      }
+      setComplete(applicationNumber as string);
+      attempt.current = null;
+      setUncertain(false);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not submit the application. Try again.');
+    } finally {
+      submitting.current = false;
+      setLoading(false);
+    }
   };
 
-  if (complete) return <main className="dashboard-page"><section className="dashboard-main wrap"><div className="dashboard-empty"><div className="success-icon"><Check size={30}/></div><strong>Your rent application has been submitted.</strong><span>Application number {complete}</span><span>Your status will be updated after review.</span><Link href="/dashboard" className="primary">Go to dashboard</Link></div></section></main>;
-  return <main className="dashboard-page"><header><div className="wrap nav"><Link href="/dashboard" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link></div></header><section className="dashboard-main wrap"><Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> 대시보드</Link><div className="dashboard-heading"><div><div className="eyebrow">NEW APPLICATION</div><h1>Rent application</h1><p>This is a test. No real payment or transfer will occur.</p></div></div><div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>Test environment</strong><span>Lease files are stored privately and accessible to you and authorized administrators.</span></div></div><form className="application-form detail-card" onSubmit={submit} noValidate><label>Lease contract<input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={chooseFile}/><small>{file ? `${file.name} (${Math.round(file.size / 1024)}KB)` : 'PDF, JPG, PNG · up to 10MB'}</small></label><label>Property address<input value={address} onChange={e=>setAddress(e.target.value)} placeholder="Address from your lease"/></label><label>Lease start date<input type="date" value={contractStart} onChange={e=>setContractStart(e.target.value)} required /></label><label>Lease end date<input type="date" value={contractEnd} onChange={e=>setContractEnd(e.target.value)} required /></label><label>Monthly rent<input type="number" value={rent} onChange={e=>setRent(Number(e.target.value))}/></label><div className="form-summary"><span>Service fee</span><b>To be confirmed</b><span>Test rent amount</span><b>{money(rent + fee)}</b></div><label>Landlord name<input value={landlordName} onChange={e=>setLandlordName(e.target.value)} placeholder="Account holder name"/></label><label>Bank<select value={bank} onChange={e=>setBank(e.target.value)}><option value="">Select a bank</option><option>국민은행</option><option>신한은행</option><option>우리은행</option><option>카카오뱅크</option></select></label><label>Account number<input value={account} onChange={e=>setAccount(e.target.value)} placeholder="Enter the account number"/></label>{message&&<p className="auth-message" role="alert">{message}</p>}<button className="primary full" disabled={loading}>{loading ? 'Saving application...' : 'Submit test application'}</button></form></section></main>;
+  const fieldError = (field: Field) => errors[field] && <small className="field-error" id={`${field}-error`}>{errors[field]}</small>;
+  const invalid = (field: Field) => Boolean(errors[field]);
+
+  if (complete) return <main className="dashboard-page">
+    <section className="dashboard-main wrap"><div className="dashboard-empty application-complete">
+      <div className="success-icon"><Check size={30}/></div>
+      <h1>Application received</h1><p>Your reference number is <strong>{complete}</strong>.</p>
+      <p>Your request is awaiting review. No card payment or bank transfer has taken place.</p>
+      <Link href="/dashboard" className="primary">Go to dashboard</Link>
+    </div></section>
+  </main>;
+
+  return <main className="dashboard-page">
+    <header><div className="wrap nav"><Link href="/dashboard" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link></div></header>
+    <section className="dashboard-main wrap application-shell">
+      <Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> My dashboard</Link>
+      <div className="dashboard-heading"><div><h1>Apply for rent payment</h1><p>Complete the four steps below to send a test application for review.</p></div></div>
+      <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>Test mode</strong><span>Your contract is stored privately. No card payment or bank transfer will occur.</span></div></div>
+      <ol className="application-steps" aria-label="Application progress">{STEPS.map((label, index) =>
+        <li key={label} className={index === step ? 'current' : index < step ? 'done' : ''} aria-current={index === step ? 'step' : undefined}>
+          <span className="step-number">{index < step ? <Check size={14}/> : index + 1}</span><span>{label}</span>
+        </li>)}</ol>
+      <form className="application-form detail-card" onSubmit={submit} noValidate>
+        <fieldset disabled={loading || uncertain}>
+          {step === 0 && <div className="step-content">
+            <div className="step-heading"><FileText size={22}/><div><h2>Upload your lease contract</h2><p>We use the contract to check the rent amount and tenancy details.</p></div></div>
+            <label htmlFor="lease-file">Lease contract <span className="required">Required</span>
+              <input id="lease-file" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={chooseFile} aria-invalid={invalid('file')} aria-describedby={errors.file ? 'file-error' : 'file-help'}/>
+              {fieldError('file')}<small id="file-help">{file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB` : 'PDF, JPG or PNG · maximum 10 MB'}</small>
+            </label>
+          </div>}
+          {step === 1 && <div className="step-content">
+            <div className="step-heading"><div><h2>Enter your rent details</h2><p>Use the address and dates shown on your lease.</p></div></div>
+            <label htmlFor="property-address">Property address <span className="required">Required</span>
+              <input id="property-address" value={address} maxLength={500} onChange={event => { setAddress(event.target.value); clearError('address'); }} placeholder="Street address and unit number" aria-invalid={invalid('address')} aria-describedby={errors.address ? 'address-error' : undefined}/>
+              {fieldError('address')}
+            </label>
+            <div className="field-pair">
+              <label htmlFor="lease-start">Lease start date <span className="required">Required</span>
+                <input id="lease-start" type="date" value={contractStart} onChange={event => { setContractStart(event.target.value); clearError('contractStart'); }} aria-invalid={invalid('contractStart')} aria-describedby={errors.contractStart ? 'contractStart-error' : undefined}/>{fieldError('contractStart')}</label>
+              <label htmlFor="lease-end">Lease end date <span className="required">Required</span>
+                <input id="lease-end" type="date" value={contractEnd} min={contractStart || undefined} onChange={event => { setContractEnd(event.target.value); clearError('contractEnd'); }} aria-invalid={invalid('contractEnd')} aria-describedby={errors.contractEnd ? 'contractEnd-error' : undefined}/>{fieldError('contractEnd')}</label>
+            </div>
+            <label htmlFor="monthly-rent">Monthly rent (KRW) <span className="required">Required</span>
+              <input id="monthly-rent" type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={rent} onChange={event => { setRent(event.target.value); clearError('rent'); }} aria-invalid={invalid('rent')} aria-describedby={errors.rent ? 'rent-error' : undefined}/>{fieldError('rent')}</label>
+            <div className="form-summary"><span>Service fee</span><b>To be confirmed</b><span>Rent amount for this test</span><b>{money(Number(rent) || 0)}</b></div>
+          </div>}
+          {step === 2 && <div className="step-content">
+            <div className="step-heading"><div><h2>Add the landlord’s deposit account</h2><p>These details are for review only. No transfer will be sent.</p></div></div>
+            <label htmlFor="landlord-name">Landlord / account holder name <span className="required">Required</span>
+              <input id="landlord-name" value={landlordName} maxLength={120} onChange={event => { setLandlordName(event.target.value); clearError('landlordName'); }} placeholder="Name on the bank account" aria-invalid={invalid('landlordName')} aria-describedby={errors.landlordName ? 'landlordName-error' : undefined}/>{fieldError('landlordName')}</label>
+            <label htmlFor="landlord-bank">Bank <span className="required">Required</span>
+              <select id="landlord-bank" value={bank} onChange={event => { setBank(event.target.value); clearError('bank'); }} aria-invalid={invalid('bank')} aria-describedby={errors.bank ? 'bank-error' : undefined}>
+                <option value="">Select a bank</option><option value="국민은행">KB Kookmin Bank</option><option value="신한은행">Shinhan Bank</option><option value="우리은행">Woori Bank</option><option value="하나은행">Hana Bank</option><option value="농협은행">NH Nonghyup Bank</option><option value="기업은행">IBK Bank</option><option value="카카오뱅크">KakaoBank</option><option value="토스뱅크">Toss Bank</option>
+              </select>{fieldError('bank')}</label>
+            <label htmlFor="account-number">Account number <span className="required">Required</span>
+              <input id="account-number" value={account} inputMode="numeric" autoComplete="off" onChange={event => { setAccount(event.target.value); clearError('account'); }} placeholder="6–30 digits" aria-invalid={invalid('account')} aria-describedby={errors.account ? 'account-error' : undefined}/>{fieldError('account')}</label>
+          </div>}
+          {step === 3 && <div className="step-content">
+            <div className="step-heading"><div><h2>Review your application</h2><p>Check your details before sending this test request for review.</p></div></div>
+            <dl className="review-list">
+              <div><dt>Contract</dt><dd>{file?.name}</dd></div>
+              <div><dt>Property</dt><dd>{address}</dd></div>
+              <div><dt>Lease dates</dt><dd>{contractStart} – {contractEnd}</dd></div>
+              <div><dt>Monthly rent</dt><dd>{money(Number(rent))}</dd></div>
+              <div><dt>Service fee</dt><dd>To be confirmed</dd></div>
+              <div><dt>Landlord</dt><dd>{landlordName}</dd></div>
+              <div><dt>Deposit account</dt><dd>{bank} · {maskAccount(account)}</dd></div>
+            </dl>
+            <p className="application-disclosure">By submitting, you send these details and the contract to Divercity Pay for a test review. No payment or transfer is made.</p>
+          </div>}
+        </fieldset>
+        {message && <p className="auth-message application-error" role="alert">{message}{message.includes('Profile') && <> <Link href="/profile">Open Profile</Link></>}</p>}
+        <div className="application-actions">
+          {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading} onClick={() => { setMessage(''); setErrors({}); setStep(current => current - 1); }}>Back</button>}
+          {step < STEPS.length - 1
+            ? <button type="button" className="primary" onClick={nextStep}>Continue <ArrowRight size={16}/></button>
+            : <button type="submit" className="primary" disabled={loading || !userId}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
+        </div>
+        {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
+      </form>
+    </section>
+  </main>;
 }
