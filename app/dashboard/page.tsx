@@ -20,6 +20,7 @@ const statusLabel: Record<string, string> = {
   pending_review: '심사 대기', approved: '심사 승인', rejected: '심사 반려',
   payment_pending: '테스트 결제 대기', payment_completed: '테스트 결제 완료',
   transfer_pending: '테스트 송금 대기', transfer_completed: '테스트 송금 완료', completed: '처리 완료',
+  cancelled: '신청 취소',
 };
 
 export default function Dashboard() {
