@@ -45,6 +45,7 @@ export default function Signup() {
   return <main className="auth-page"><div className="auth-box">
     <Link href="/" className="brand"><span className="logo">D</span><span>Divercity <span>Pay</span></span></Link>
     <h1>Create account</h1><p>Start your rent payment journey.</p>
+    <p className="auth-legal">Before entering personal information, read our <Link href="/terms">Terms of use</Link> and <Link href="/privacy">Privacy policy</Link>. Account details are stored when you create an account. This is a test service.</p>
     <label>Full name<input value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" /></label>
     <label>Contact phone<input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+82 10-1234-5678" /><small>International numbers are accepted. This is a contact number, not identity verification.</small></label>
     <label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ServiceFooter from '../../components/ServiceFooter';
 import { ArrowLeft, Mail, MessageCircle } from 'lucide-react';
 
 export default function ContactPage() {
@@ -14,5 +15,6 @@ export default function ContactPage() {
       </div>
       <div className="info-note"><div><strong>Test service response</strong>This is a prototype operated for workflow testing. Support responses do not represent a financial institution or a completed payment service.</div></div>
     </section>
+    <ServiceFooter/>
   </main>;
 }

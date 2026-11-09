@@ -1,0 +1,18 @@
+.service-footer{background:#fff;color:var(--ink);padding:36px 0;border-top:1px solid var(--line)}
+.service-footer-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:26px}
+.service-footer a{color:var(--navy);text-underline-offset:4px}.service-footer .brand{text-decoration:none}
+.service-footer nav{display:flex;flex-wrap:wrap;gap:12px 24px;font-size:12px;line-height:1.8}
+.service-company{display:flex;flex-wrap:wrap;gap:16px 32px;font-size:12px;line-height:1.9;margin:0}
+.service-company div{min-width:0}.service-company dt{color:#52647a}.service-company dd{margin:2px 0 0;overflow-wrap:anywhere}.service-company .service-address{flex-basis:100%}
+.service-footer-note{color:#52647a;font-size:12px;line-height:1.8;margin:24px 0 0}
+.legal-page{background:#fff}.legal-document{max-width:760px;width:calc(100% - 40px);margin:auto;padding:56px 0 80px;color:var(--ink)}
+.legal-document h1{font-size:clamp(32px,5vw,44px);letter-spacing:-.035em;line-height:1.2;margin:0 0 16px;color:var(--navy)}
+.legal-version{font-size:13px;color:#52647a}.legal-intro{font-size:17px;line-height:1.8;margin:28px 0}
+.legal-contents{display:flex;flex-wrap:wrap;gap:12px 24px;padding:24px 0;border-block:1px solid var(--line)}
+.legal-document a{color:#225bc4;text-underline-offset:4px}.legal-contents a{font-size:14px}
+.legal-document section{padding-top:36px;scroll-margin-top:100px}.legal-document h2{font-size:21px;line-height:1.4;margin:0 0 12px;color:var(--navy)}
+.legal-document section p{font-size:15px;line-height:1.95;margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.legal-document details{margin-top:44px;padding-top:24px;border-top:1px solid var(--line)}.legal-document summary{cursor:pointer;font-weight:700;min-height:44px;line-height:1.8}
+.legal-help{margin-top:40px;line-height:1.8}.auth-legal{font-size:12px!important;line-height:1.8!important;color:#52647a!important;text-align:left!important}.auth-legal a{color:#225bc4;text-underline-offset:3px}
+.service-footer a:focus-visible,.legal-document a:focus-visible,.legal-document summary:focus-visible{outline:2px solid var(--blue);outline-offset:4px}
+@media(max-width:700px){.service-footer-top{flex-direction:column}.service-footer nav{gap:12px 20px}.service-company{display:block}.service-company div{margin-top:14px}.legal-document{padding-top:36px}.legal-contents{display:grid;gap:14px}.legal-document section p{font-size:15px}.legal-document section{padding-top:28px}}

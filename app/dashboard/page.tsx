@@ -41,6 +41,6 @@ export default function Dashboard(){
     {applications.length===0?<p className="work-hint">Your submitted applications will appear here.</p>:<div className="work-application-list">{applications.slice(0,5).map(a=><Link key={a.id} href={`/applications/${a.id}`} className="work-application-row"><div><strong>₩{Number(a.rent_amount).toLocaleString('ko-KR')} <small>/ month</small></strong><span>{a.application_number||a.id.slice(0,8).toUpperCase()} · {new Date(a.created_at).toLocaleDateString('en-GB')}</span></div><div><StatusBadge journey={getJourney(a.status,orders[a.id])}/><ArrowRight size={16}/></div></Link>)}</div>}
    </section>
   </>}
-  <footer className="work-footer"><div><Link href="/contact">Need help?</Link><Link href="/fees">Fees</Link><Link href="/profile">Manage profile</Link></div><button type="button" className="work-text-button" onClick={async()=>{await supabase.auth.signOut();window.location.href='/';}}>Sign out</button></footer>
+  <footer className="work-footer"><div><Link href="/contact">Need help?</Link><Link href="/fees">Fees</Link><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link><Link href="/profile">Manage profile</Link></div><button type="button" className="work-text-button" onClick={async()=>{await supabase.auth.signOut();window.location.href='/';}}>Sign out</button></footer>
  </div></main>;
 }

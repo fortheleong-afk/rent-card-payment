@@ -6,6 +6,7 @@ import { ArrowRight, Building2, Check, ChevronRight, CreditCard, FileText, LockK
 import './home-preview.css';
 import AuthStatus from '../components/AuthStatus';
 import ApplicationDemo from '../components/ApplicationDemo';
+import ServiceFooter from '../components/ServiceFooter';
 
 
 export default function Home() {
@@ -43,6 +44,6 @@ export default function Home() {
     <section id="apply" className="apply-section"><div className="wrap"><div className="section-head"><div><div className="eyebrow">APPLICATION DEMO</div><h2>Try a rent application</h2></div><div className="test-note"><LockKeyhole size={16}/> Demo only · Nothing is sent or saved</div></div><ApplicationDemo /></div></section>
     <section id="faq" className="section wrap"><div className="section-head"><div><div className="eyebrow">FAQ</div><h2>FAQ</h2></div><p>Learn more before using the test service.</p></div><div className="faq-list"><details><summary>Does the landlord need to sign up?</summary><p>No. The test service only demonstrates the flow to the designated account entered by the tenant.</p></details><details><summary>Are real card payments or transfers made?</summary><p>No. All payments and transfers remain simulated until financial partner integration.</p></details><details><summary>Where is my contract stored?</summary><p>It is stored in private Supabase Storage and accessible only to you and authorized admins via secure links.</p></details><details><summary>Can I cancel an application?</summary><p>Applications can be cancelled from the detail page while awaiting review.</p></details></div></section>
     <section id="safe" className="safe wrap"><ShieldCheck size={30}/><div><h2>Start with confidence</h2><p>Your personal data and contract files are protected. No real transaction occurs before financial partner integration.</p></div></section>
-    <footer><div className="wrap footer-inner"><div className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></div><div className="footer-links"><Link href="/fees">Fees</Link><Link href="/privacy">Privacy</Link><Link href="/contact">Contact</Link><span>© 2026 DIVERCITY PAY · Test service</span></div></div></footer>
+    <ServiceFooter/>
   </main>;
 }

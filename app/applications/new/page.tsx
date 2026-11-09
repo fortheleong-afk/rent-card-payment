@@ -241,7 +241,7 @@ export default function NewApplication() {
     <section className="dashboard-main wrap application-shell">
       <Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> My dashboard</Link>
       <div className="dashboard-heading"><div><h1>Apply for rent payment</h1><p>Complete the four steps below to send a test application for review.</p></div></div>
-      <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>Test mode</strong><span>Your contract is stored privately. No card payment or bank transfer will occur.</span></div></div>
+      <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>Test mode</strong><span>Use a sample contract for testing. Selected files and entered details can be saved before submission. No real payment or transfer will occur. <Link href="/privacy">Read the privacy policy</Link>.</span></div></div>
       <div className="draft-save-bar" aria-label="Draft save status">
         <div><strong>{conflict?'Another tab changed this draft':saving?'Saving your private draft…':saveError?'Draft not saved':draftSignature(snapshot.current.payload,step,file)!==lastSaved.current?'Unsaved changes':`Saved ${draft?new Date(draft.updated_at).toLocaleTimeString('en-GB'):''}`}</strong><p>Your details and selected contract are saved privately to your account. You can return here to continue.</p></div>
         {!uncertain&&!conflict&&<button type="button" className="secondary" disabled={loading||saving} onClick={saveAndExit}>Save & exit</button>}
