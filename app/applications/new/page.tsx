@@ -237,7 +237,7 @@ export default function NewApplication() {
   </main>;
 
   return <main className="dashboard-page">
-    <header><div className="wrap nav"><Link href="/dashboard" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link></div></header>
+    <header><div className="wrap nav"><Link href="/" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link></div></header>
     <section className="dashboard-main wrap application-shell">
       <Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> My dashboard</Link>
       <div className="dashboard-heading"><div><h1>Apply for rent payment</h1><p>Complete the four steps below to send a test application for review.</p></div></div>
