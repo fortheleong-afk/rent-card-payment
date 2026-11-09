@@ -75,3 +75,7 @@
   .application-form .review-list div { grid-template-columns: 1fr; gap: 5px; }
   .application-actions button { flex: 1; }
 }
+.draft-save-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px;margin:18px 0;background:#fff;border:1px solid #d6e0ec;border-radius:8px;color:#243e5e}
+.draft-save-bar strong{font-size:13px}.draft-save-bar p{font-size:12px;line-height:1.6;margin:5px 0 0;color:#526783;max-width:60ch}.draft-save-bar button{min-height:44px;flex:none;margin:0;cursor:pointer}
+.draft-warning{padding:16px 18px;background:#fffbf2;border:1px solid #e3d2ab;border-radius:8px;margin:14px 0;color:#775025;font-size:13px;line-height:1.6;overflow-wrap:anywhere}.draft-warning p{margin:6px 0 12px}.draft-warning button{min-height:44px;cursor:pointer}.draft-recovery-actions{display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:600px){.draft-save-bar{align-items:flex-start;flex-direction:column;gap:12px}.draft-save-bar button{width:100%}.draft-recovery-actions{flex-direction:column}.draft-recovery-actions button{width:100%}}

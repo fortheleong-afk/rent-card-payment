@@ -1,0 +1,52 @@
+-- QA metadata fixture only; no actual file blob or financial API. All changes roll back.
+begin;
+select set_config('request.jwt.claim.sub','179a648b-e817-40cd-88c9-29a8ce2a3b15',true);
+do $$ declare d public.application_drafts; begin
+ d:=public.open_application_draft(false);
+ if d.state='submitting' then d:=public.edit_application_draft(d.id);end if;
+ if d.state='submitted' then d:=public.open_application_draft(true);end if;
+ insert into storage.objects(bucket_id,name,metadata,created_at)
+ values('contract-documents',d.user_id::text||'/'||d.id::text||'/'||repeat('a',64)||'.png','{"size":128,"mimetype":"image/png"}'::jsonb,now()-interval '8 days');
+end $$;
+set local role authenticated;
+do $$ declare d public.application_drafts; restored public.application_drafts; original_id uuid; rev integer; number text; again text;
+ payload jsonb:='{"address":"QA draft recovery only","contractStart":"2026-11-01","contractEnd":"2027-10-31","rent":"750000","landlordName":"QA LANDLORD","bank":"신한은행","account":"000000000000"}'; path text;
+begin
+ d:=public.open_application_draft(false);original_id:=d.id;rev:=d.revision;
+ restored:=public.open_application_draft(false);
+ if restored.id<>d.id then raise exception 'Open created a duplicate draft';end if;
+ path:=d.user_id::text||'/'||d.id::text||'/'||repeat('a',64)||'.png';
+ d:=public.save_application_draft(d.id,d.revision,payload,2,path,'qa-draft.png',false);
+ restored:=public.open_application_draft(false);
+ if restored.id<>original_id or restored.payload<>payload or restored.step<>2 or restored.contract_file_path<>path or restored.contract_file_size<>128 then raise exception 'Draft restore failed';end if;
+ if public.can_delete_unlinked_contract(path,now()-interval '8 days') then raise exception 'Saved contract deletion allowed';end if;
+ begin perform public.save_application_draft(d.id,rev,payload,2,path,'qa-draft.png',false);raise exception 'Stale save accepted';exception when serialization_failure then null;end;
+ begin perform public.open_application_draft(true);raise exception 'Active draft replaced';exception when invalid_parameter_value then null;end;
+ perform set_config('request.jwt.claim.sub','715b286c-24f5-44cc-8569-593f3ee94bfa',true);
+ if exists(select 1 from public.application_drafts where id=original_id) then raise exception 'Other user draft visible';end if;
+ begin perform public.save_application_draft(original_id,d.revision,payload,2,path,'qa-draft.png',false);raise exception 'Other user save allowed';exception when insufficient_privilege then null;end;
+ begin perform public.submit_application_draft(original_id);raise exception 'Other user submission allowed';exception when insufficient_privilege then null;end;
+ perform set_config('request.jwt.claim.sub','179a648b-e817-40cd-88c9-29a8ce2a3b15',true);
+ d:=public.save_application_draft(d.id,d.revision,payload,3,path,'qa-draft.png',true);
+ restored:=public.open_application_draft(false);
+ if restored.state<>'submitting' or restored.id<>original_id then raise exception 'Pending recovery lost ID';end if;
+ begin perform public.save_application_draft(d.id,d.revision,payload,1,path,'qa-draft.png',false);raise exception 'Prepared contents mutated';exception when invalid_parameter_value then null;end;
+ d:=public.edit_application_draft(d.id);
+ if d.state<>'editing' then raise exception 'Safe edit recovery failed';end if;
+ d:=public.save_application_draft(d.id,d.revision,payload,3,path,'qa-draft.png',true);
+ number:=public.submit_application_draft(d.id);again:=public.submit_application_draft(d.id);
+ if number is null or number<>again then raise exception 'Retry result differs';end if;
+ if(select count(*) from public.rent_applications where id=original_id)<>1 then raise exception 'Duplicate submission';end if;
+ if(select count(*) from public.application_status_history where application_id=original_id)<>1 then raise exception 'Duplicate status history';end if;
+ if(select count(*) from public.notifications where application_id=original_id)<>1 then raise exception 'Duplicate notification';end if;
+ if exists(select 1 from public.payment_orders where application_id=original_id) then raise exception 'Unexpected payment order';end if;
+ restored:=public.open_application_draft(false);
+ if restored.state<>'submitted' or restored.application_number<>number then raise exception 'Reload did not recover receipt';end if;
+ restored:=public.edit_application_draft(original_id);
+ if restored.state<>'submitted' then raise exception 'Submitted draft reopened for edits';end if;
+ restored:=public.open_application_draft(true);
+ if restored.id=original_id or restored.state<>'editing' or restored.contract_file_path is not null then raise exception 'New application reset failed';end if;
+ if has_table_privilege('authenticated','public.application_drafts','UPDATE') or has_table_privilege('authenticated','public.application_drafts','INSERT') or has_function_privilege('anon','public.submit_application_draft(uuid)','EXECUTE') then raise exception 'Unsafe draft permissions';end if;
+end $$;
+rollback;
+select 'PASS: private restore + file reference, stale-tab protection, pending recovery, safe edit, idempotent receipt, no payment; rolled back' as result;

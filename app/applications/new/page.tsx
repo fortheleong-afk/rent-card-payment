@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, FileText, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import { ApplicationDraft,StoredContract,emptyDraftPayload,draftSignature,draftError } from '../../../lib/application-drafts';
 import './application.css';
 
 const STEPS = ['Lease contract', 'Rent details', 'Deposit account', 'Review & submit'];
@@ -13,7 +14,7 @@ const money = (value: number) => `₩${new Intl.NumberFormat('ko-KR').format(val
 const maskAccount = (value: string) => value ? `••••${value.replace(/\D/g, '').slice(-4)}` : '—';
 
 type Field = 'file' | 'address' | 'contractStart' | 'contractEnd' | 'rent' | 'landlordName' | 'bank' | 'account';
-type Attempt = { id: string; path: string; uploaded: boolean };
+type Attempt = { id: string; path: string; uploaded: boolean; file:File };
 
 export default function NewApplication() {
   const [step, setStep] = useState(0);
@@ -25,7 +26,7 @@ export default function NewApplication() {
   const [address, setAddress] = useState('');
   const [contractStart, setContractStart] = useState('');
   const [contractEnd, setContractEnd] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | StoredContract | null>(null);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,12 +36,103 @@ export default function NewApplication() {
   const attempt = useRef<Attempt | null>(null);
   const submitting = useRef(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) window.location.href = '/login?next=/applications/new';
-      else setUserId(data.session.user.id);
+  const [draft,setDraft]=useState<ApplicationDraft|null>(null);
+  const [ready,setReady]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const [saveError,setSaveError]=useState('');
+  const [conflict,setConflict]=useState(false);
+  const serverDraft=useRef<ApplicationDraft|null>(null);
+  const lastSaved=useRef('');
+  const saveQueue=useRef<Promise<unknown>>(Promise.resolve());
+  const active=useRef(true);
+  const snapshot=useRef({payload:emptyDraftPayload,step:0,file:null as File|StoredContract|null});
+  snapshot.current={payload:{address,contractStart,contractEnd,rent,landlordName,bank,account},step,file};
+
+  const applyDraft=(d:ApplicationDraft)=>{
+    const p={...emptyDraftPayload,...d.payload};
+    const savedFile:StoredContract|null=d.contract_file_path&&d.contract_file_name?{name:d.contract_file_name,size:d.contract_file_size??0,type:d.contract_file_type??'',path:d.contract_file_path}:null;
+    serverDraft.current=d;setDraft(d);setUserId(d.user_id);
+    setAddress(p.address);setContractStart(p.contractStart);setContractEnd(p.contractEnd);setRent(p.rent);
+    setLandlordName(p.landlordName);setBank(p.bank);setAccount(p.account);setFile(savedFile);setStep(d.step);
+    snapshot.current={payload:p,step:d.step,file:savedFile};
+    lastSaved.current=draftSignature(p,d.step,savedFile);
+    attempt.current=null;setErrors({});setReviewConfirmed(false);setConflict(false);setSaveError('');
+    setUncertain(d.state==='submitting');setComplete(d.state==='submitted'?d.application_number??'':'');setReady(true);
+  };
+  const restore=async(startNew=false)=>{
+    setLoading(true);setMessage('');
+    try{
+      const {data:auth,error:authError}=await supabase.auth.getUser();
+      if(authError||!auth.user){window.location.href='/login?next=/applications/new';return;}
+      const {data,error}=await supabase.rpc('open_application_draft',{p_new:startNew});
+      if(error)throw error;if(!data)throw new Error('Your saved application is unavailable.');
+      if(active.current)applyDraft(data as ApplicationDraft);
+    }catch(e){if(active.current)setMessage(draftError(e));}
+    finally{if(active.current)setLoading(false);}
+  };
+  useEffect(()=>{
+    active.current=true;restore();
+    const {data:listener}=supabase.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')window.location.href='/login?next=/applications/new';});
+    const warn=(event:BeforeUnloadEvent)=>{
+      if(serverDraft.current?.state==='editing'&&draftSignature(snapshot.current.payload,snapshot.current.step,snapshot.current.file)!==lastSaved.current){event.preventDefault();event.returnValue='';}
+    };
+    window.addEventListener('beforeunload',warn);
+    return()=>{active.current=false;listener.subscription.unsubscribe();window.removeEventListener('beforeunload',warn);};
+  },[]);
+
+  const saveDraft=(prepare=false):Promise<ApplicationDraft>=>{
+    const task=saveQueue.current.then(async()=>{
+      const d=serverDraft.current;if(!d)throw new Error('Restore your saved application first.');
+      if(d.state!=='editing')throw new Error('Check your submission result before editing.');
+      const current=snapshot.current;const signature=draftSignature(current.payload,current.step,current.file);
+      if(!prepare&&signature===lastSaved.current)return d;
+      setSaving(true);setSaveError('');
+      try{
+        let path:string|null=null;
+        if(current.file){
+          if(current.file instanceof File){
+            if(!attempt.current||attempt.current.file!==current.file){
+              const digest=await crypto.subtle.digest('SHA-256',await current.file.arrayBuffer());
+              const hash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
+              const extension=current.file.type==='application/pdf'?'pdf':current.file.type==='image/png'?'png':'jpg';
+              attempt.current={id:d.id,path:`${d.user_id}/${d.id}/${hash}.${extension}`,uploaded:false,file:current.file};
+            }
+            const pending=attempt.current;
+            if(!pending.uploaded){
+              const uploaded=await supabase.storage.from('contract-documents').upload(pending.path,current.file,{contentType:current.file.type,upsert:false});
+              if(uploaded.error&&!/already exists|duplicate/i.test(uploaded.error.message))throw uploaded.error;
+              pending.uploaded=true;
+            }
+            path=pending.path;
+          }else path=current.file.path;
+        }
+        const {data,error}=await supabase.rpc('save_application_draft',{p_id:d.id,p_revision:d.revision,p_payload:current.payload,p_step:current.step,p_file_path:path,p_file_name:current.file?.name??null,p_prepare:prepare});
+        if(error){if(error.code==='40001')setConflict(true);throw error;}
+        if(!data)throw new Error('The saved result was not confirmed.');
+        serverDraft.current=data as ApplicationDraft;lastSaved.current=signature;
+        if(active.current)setDraft(data as ApplicationDraft);
+        return data as ApplicationDraft;
+      }catch(e){if(active.current)setSaveError(draftError(e));throw e;}
+      finally{if(active.current)setSaving(false);}
     });
-  }, []);
+    saveQueue.current=task.catch(()=>undefined);return task;
+  };
+  useEffect(()=>{
+    if(!ready||complete||uncertain||conflict||loading)return;
+    const timer=window.setTimeout(()=>{saveDraft().catch(()=>undefined);},900);
+    return()=>window.clearTimeout(timer);
+  },[ready,complete,uncertain,conflict,loading,address,contractStart,contractEnd,rent,landlordName,bank,account,step,file]);
+
+  const saveAndExit=async()=>{
+    if(submitting.current)return;submitting.current=true;setLoading(true);
+    try{await saveDraft();window.location.href='/dashboard';}catch(e){setMessage(draftError(e));}
+    finally{submitting.current=false;setLoading(false);}
+  };
+  const resumeEditing=async()=>{
+    if(!serverDraft.current||submitting.current)return;submitting.current=true;setLoading(true);
+    try{const {data,error}=await supabase.rpc('edit_application_draft',{p_id:serverDraft.current.id});if(error)throw error;applyDraft(data as ApplicationDraft);setMessage('Saved details restored. Review them and confirm again before submitting.');}
+    catch(e){setMessage(draftError(e));}finally{submitting.current=false;setLoading(false);}
+  };
 
   const clearError = (field: Field) => {
     setErrors(previous => ({ ...previous, [field]: undefined }));
@@ -49,7 +141,8 @@ export default function NewApplication() {
 
   const chooseFile = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
-    if (!selected || !VALID_TYPES.includes(selected.type) || selected.size < 1 || selected.size > MAX_FILE_BYTES) {
+    if (!selected) return;
+    if (!VALID_TYPES.includes(selected.type) || selected.size < 1 || selected.size > MAX_FILE_BYTES) {
       setFile(null);
       setErrors(previous => ({ ...previous, file: 'Choose a PDF, JPG or PNG file between 1 byte and 10 MB.' }));
       event.target.value = '';
@@ -99,91 +192,47 @@ export default function NewApplication() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event:FormEvent) => {
     event.preventDefault();
-    if (step !== STEPS.length - 1 || submitting.current || !userId || !file) return;
-    if (!reviewConfirmed) { setMessage('Confirm the details before submitting.'); return; }
-    if (![0, 1, 2].every(validate)) {
-      setMessage('Some details need attention. Go back and review your application.');
-      return;
+    if(submitting.current||!userId||!serverDraft.current)return;
+    if(!uncertain){
+      if(step!==STEPS.length-1||!file)return;
+      if(!reviewConfirmed){setMessage('Confirm the details before submitting.');return;}
+      if(![0,1,2].every(validate)){setMessage('Some details need attention. Go back and review your application.');return;}
     }
-    submitting.current = true;
-    setLoading(true);
-    setMessage('');
-    try {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      if (authError || authData.user?.id !== userId) throw new Error('Your session expired. Sign in again and retry.');
-      const { data: profile, error: profileError } = await supabase.from('profiles')
-        .select('full_name,phone').eq('id', userId).maybeSingle();
-      if (profileError) throw new Error('We could not verify your profile. Try again.');
-      if (!profile?.full_name?.trim() || !profile?.phone?.trim()) {
-        throw new Error('Add your name and contact number in Profile before submitting.');
-      }
-
-      if (!attempt.current) {
-        const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
-        const hash = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
-        const extension = file.type === 'application/pdf' ? 'pdf' : file.type === 'image/png' ? 'png' : 'jpg';
-        const id = crypto.randomUUID();
-        attempt.current = { id, path: `${userId}/${id}/${hash}.${extension}`, uploaded: false };
-      }
-      const pending = attempt.current;
-      if (!pending.uploaded) {
-        const { error: uploadError } = await supabase.storage.from('contract-documents')
-          .upload(pending.path, file, { contentType: file.type, upsert: false });
-        if (uploadError && !/already exists|duplicate/i.test(uploadError.message)) {
-          // A network failure can happen after Storage accepted the file.
-          // Reuse the exact same path on retry to avoid an orphaned second copy.
-          setUncertain(true);
-          throw new Error(`We could not confirm the contract upload. Retry this submission. (${uploadError.message})`);
-        }
-        pending.uploaded = true;
-      }
-
-      const { data: applicationNumber, error: submitError } = await supabase.rpc('submit_rent_application', {
-        p_request_id: pending.id,
-        p_property_address: address.trim(),
-        p_contract_start_date: contractStart,
-        p_contract_end_date: contractEnd,
-        p_rent_amount: Number(rent),
-        p_landlord_name: landlordName.trim(),
-        p_landlord_bank: bank,
-        p_landlord_account: account.trim(),
-        p_contract_file_path: pending.path,
-        p_contract_file_name: file.name,
-      });
-      if (submitError || !applicationNumber) {
-        if (submitError?.code === '22023' || submitError?.code === '42501') {
-          const { error: cleanupError } = await supabase.storage.from('contract-documents').remove([pending.path]);
-          if (!cleanupError) attempt.current = null;
-          setUncertain(Boolean(cleanupError));
-          throw new Error(submitError.message);
-        }
-        // A timeout can occur after the database commits. Keep this ID and file
-        // for an identical retry instead of creating a second application.
+    submitting.current=true;setLoading(true);setMessage('');
+    try{
+      const {data:auth,error:authError}=await supabase.auth.getUser();
+      if(authError||auth.user?.id!==userId)throw new Error('Your session expired. Sign in again to recover your saved application.');
+      if(!uncertain){
+        const {data:profile,error}=await supabase.from('profiles').select('full_name,phone').eq('id',userId).maybeSingle();
+        if(error)throw error;
+        if(!profile?.full_name?.trim()||!profile?.phone?.trim())throw new Error('Add your name and contact number in Profile before submitting.');
         setUncertain(true);
-        throw new Error('We could not confirm your submission. Check your dashboard, then retry here with the same submission ID. Do not start a new application yet.');
+        await saveDraft(true);
       }
-      setComplete(applicationNumber as string);
-      attempt.current = null;
-      setUncertain(false);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not submit the application. Try again.');
-    } finally {
-      submitting.current = false;
-      setLoading(false);
-    }
+      const {data,error}=await supabase.rpc('submit_application_draft',{p_id:serverDraft.current!.id});
+      if(error)throw error;
+      if(!data)throw new Error('The submission result is not confirmed. Check the saved result or retry this same submission.');
+      // The wrapper calls the existing atomic submit function with the saved ID.
+      setComplete(String(data));setUncertain(false);setSaveError('');
+      serverDraft.current={...serverDraft.current!,state:'submitted',application_number:String(data)};
+    }catch(e){setMessage(draftError(e));}
+    finally{submitting.current=false;setLoading(false);}
   };
 
   const fieldError = (field: Field) => errors[field] && <small className="field-error" id={`${field}-error`}>{errors[field]}</small>;
   const invalid = (field: Field) => Boolean(errors[field]);
 
+  if(!ready) return <main className="dashboard-page"><section className="dashboard-main wrap application-shell"><Link href="/dashboard" className="back-link">My dashboard</Link><div className="dashboard-empty"><h1>Restore your application</h1>{loading?<p role="status">Checking saved details and submission results…</p>:<><p role="alert">{message||'Could not load your saved application.'}</p><button className="secondary" onClick={()=>restore()}>Try again</button></>}</div></section></main>;
   if (complete) return <main className="dashboard-page">
     <section className="dashboard-main wrap"><div className="dashboard-empty application-complete">
       <div className="success-icon"><Check size={30}/></div>
       <h1>Application received</h1><p>Your reference number is <strong>{complete}</strong>.</p>
       <p>Your request is awaiting review. No card payment or bank transfer has taken place.</p>
-      <Link href="/dashboard" className="primary">Go to dashboard</Link>
+      <Link href={`/applications/${serverDraft.current?.id}`} className="primary">View application</Link>
+      <Link href="/dashboard" className="secondary">Go to dashboard</Link>
+      <button type="button" className="secondary" disabled={loading} onClick={()=>restore(true)}>{loading?'Starting…':'Start another application'}</button>
     </div></section>
   </main>;
 
@@ -193,18 +242,25 @@ export default function NewApplication() {
       <Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> My dashboard</Link>
       <div className="dashboard-heading"><div><h1>Apply for rent payment</h1><p>Complete the four steps below to send a test application for review.</p></div></div>
       <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>Test mode</strong><span>Your contract is stored privately. No card payment or bank transfer will occur.</span></div></div>
+      <div className="draft-save-bar" aria-label="Draft save status">
+        <div><strong>{conflict?'Another tab changed this draft':saving?'Saving your private draft…':saveError?'Draft not saved':draftSignature(snapshot.current.payload,step,file)!==lastSaved.current?'Unsaved changes':`Saved ${draft?new Date(draft.updated_at).toLocaleTimeString('en-GB'):''}`}</strong><p>Your details and selected contract are saved privately to your account. You can return here to continue.</p></div>
+        {!uncertain&&!conflict&&<button type="button" className="secondary" disabled={loading||saving} onClick={saveAndExit}>Save & exit</button>}
+      </div>
+      {saveError&&<div className="draft-warning" role="alert"><p>{saveError}</p>{!conflict&&!uncertain&&<button type="button" className="secondary" disabled={saving||loading} onClick={()=>saveDraft().catch(()=>undefined)}>Retry save</button>}</div>}
+      {conflict&&<div className="draft-warning" role="alert"><p>Newer saved changes are protected. Reload the saved draft before editing further.</p><button type="button" className="secondary" disabled={loading} onClick={()=>restore()}>Reload saved draft</button></div>}
+      {uncertain&&<div className="draft-warning" role="status"><strong>Check your submission result</strong><p>This application keeps the same submission ID after refresh. Check the result first. If it is still pending, retry the saved submission without creating a new application.</p><div className="draft-recovery-actions"><button type="button" className="secondary" disabled={loading} onClick={()=>restore()}>Check saved result</button><button type="button" className="secondary" disabled={loading} onClick={resumeEditing}>Return to saved details</button></div></div>}
       <p className="application-mobile-progress">Step {step + 1} of {STEPS.length} <strong>{STEPS[step]}</strong></p>
       <ol className="application-steps" aria-label="Application progress">{STEPS.map((label, index) =>
         <li key={label} className={index === step ? 'current' : index < step ? 'done' : ''} aria-current={index === step ? 'step' : undefined}>
           <span className="step-number">{index < step ? <Check size={14}/> : index + 1}</span><span className="step-label">{label}</span>
         </li>)}</ol>
       <form className="application-form detail-card" onSubmit={submit} noValidate>
-        <fieldset disabled={loading || uncertain}>
+        <fieldset disabled={loading || uncertain || conflict}>
           {step === 0 && <div className="step-content">
             <div className="step-heading"><FileText size={22}/><div><h2>Upload your lease contract</h2><p>We use the contract to check the rent amount and tenancy details.</p></div></div>
             <label htmlFor="lease-file">Lease contract <span className="required">Required</span>
               <input id="lease-file" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={chooseFile} aria-invalid={invalid('file')} aria-describedby={errors.file ? 'file-error' : 'file-help'}/>
-              {fieldError('file')}<small id="file-help">{file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB` : 'PDF, JPG or PNG · maximum 10 MB'}</small>
+              {fieldError('file')}<small id="file-help">{file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB${file instanceof File?'':' · restored from your private draft'}` : 'PDF, JPG or PNG · maximum 10 MB'}</small>
             </label>
           </div>}
           {step === 1 && <div className="step-content">
@@ -251,10 +307,10 @@ export default function NewApplication() {
         </fieldset>
         {message && <p className="auth-message application-error" role="alert">{message}{message.includes('Profile') && <> <Link href="/profile">Open Profile</Link></>}</p>}
         <div className="application-actions">
-          {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading} onClick={() => { setMessage(''); setErrors({}); setReviewConfirmed(false); setStep(current => current - 1); }}>Back</button>}
-          {step < STEPS.length - 1
-            ? <button type="button" className="primary" onClick={nextStep}>Continue <ArrowRight size={16}/></button>
-            : <button type="submit" className="primary" disabled={loading || !userId}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
+          {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading||conflict} onClick={() => { setMessage(''); setErrors({}); setReviewConfirmed(false); setStep(current => current - 1); }}>Back</button>}
+          {step < STEPS.length - 1 && !uncertain
+            ? <button type="button" className="primary" disabled={loading||conflict} onClick={nextStep}>Continue <ArrowRight size={16}/></button>
+            : <button type="submit" className="primary" disabled={loading || !userId || conflict}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
         </div>
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
       </form>
