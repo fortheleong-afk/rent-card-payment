@@ -28,7 +28,7 @@ export default function Dashboard(){
  const priority=(a:Application)=>({payout_attention:0,payment_failed:1,ready:2,payment:3,payout:4,payout_processing:4,review:5} as Record<string,number>)[getJourney(a.status,orders[a.id]).key]??10;
  const focus=[...applications].sort((a,b)=>priority(a)-priority(b))[0];
  return <main className="dashboard-page work-page"><AccountHeader/><div className="wrap work-main">
-  <div className="work-page-heading"><div><h1>{name?`Hello, ${name}`:'Your rent dashboard'}</h1><p>Track your rent application and see what happens next.</p></div><Link href="/applications/new" className="work-button work-button-primary"><Plus size={17}/> New application</Link></div>
+  <div className="work-page-heading"><div><h1>{name?`Hello, ${name}`:'Your rent dashboard'}</h1><p>Track your rent application and see what happens next.</p></div><Link href="/applications/new" className={`work-button ${!focus||priority(focus)>=5?'work-button-primary':''}`}><Plus size={17}/> New application</Link></div>
   <TestNotice/>
   {loading?<div className="work-loading" role="status">Loading your rent activity…</div>:error?<div className="work-error" role="alert"><p>{error}</p><button className="work-button" onClick={load}>Try again</button></div>:<>
    {!completeProfile&&<div className="work-profile-note"><p>Add your name and contact number before your next application.</p><Link href="/profile">Complete profile <ArrowRight size={15}/></Link></div>}
