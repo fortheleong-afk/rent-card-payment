@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {ArrowLeft,ArrowRight,RotateCcw,ShieldCheck} from 'lucide-react';
 import {supabase} from '../../../lib/supabase';
 import {isDemoAccount} from '../../../lib/demo-account';
-import {DemoApplication,DEMO_STORAGE_KEY,initialDemoApplications} from '../../../lib/demo-fixtures';
+import {DemoApplication,DemoSubmission,DEMO_STORAGE_KEY,initialDemoApplications,createDemoApplication,restoreDemoApplications} from '../../../lib/demo-fixtures';
 import {getJourney} from '../../../lib/workflow';
 import {JourneyPanel,StatusBadge} from '../../../components/WorkflowStatus';
 import ApplicationDemo from '../../../components/ApplicationDemo';
@@ -16,7 +16,8 @@ const money=(value:number)=>'₩'+value.toLocaleString('ko-KR');
 export default function DemoWorkspace({params}:{params:{view?:string[]}}) {
  const view=params.view?.[0]??'dashboard',admin=view==='admin',router=useRouter();
  const [ready,setReady]=useState(false),[authError,setAuthError]=useState('');
- const [rows,setRows]=useState<DemoApplication[]>(initialDemoApplications),[selected,setSelected]=useState('sample-01');
+ const [rows,setRows]=useState<DemoApplication[]>(initialDemoApplications),[selected,setSelected]=useState('');
+ const rowsRef=useRef(rows);rowsRef.current=rows;
  const [search,setSearch]=useState(''),[reason,setReason]=useState(''),[feedback,setFeedback]=useState('');
  useEffect(()=>{
   let active=true;
@@ -24,32 +25,32 @@ export default function DemoWorkspace({params}:{params:{view?:string[]}}) {
    if(!active)return;
    if(error){setAuthError('Could not verify the demo session. Please log in with the demo account.');return;}
    if(!isDemoAccount(data.user)){router.replace('/login?next=%2Fdemo%2Fdashboard');return;}
-   // Only known fixture IDs and workflow values are restored; no production records.
    try{
     const raw=sessionStorage.getItem(DEMO_STORAGE_KEY);
-    if(raw){const saved=JSON.parse(raw);if(Array.isArray(saved)){
-     const base=initialDemoApplications();
-     setRows(base.map(row=>{const previous=saved.find((r:{id?:string})=>r.id===row.id);
-      if(!previous)return row;
-      return {...row,
-       status:['pending_review','approved','rejected','cancelled'].includes(previous.status)?previous.status:row.status,
-       payment:['pending','paid','failed','cancelled'].includes(previous.payment)?previous.payment:row.payment,
-       payout:['not_ready','pending','completed','failed'].includes(previous.payout)?previous.payout:row.payout,
-       history:Array.isArray(previous.history)?previous.history.filter((h:unknown)=>typeof h==='string').slice(0,40):row.history};
-     }));
-    }}
-   }catch{/* session storage is optional; the fixed samples still work. */}
+    if(raw){const restored=restoreDemoApplications(JSON.parse(raw));rowsRef.current=restored;setRows(restored);}
+   }catch{/* Storage is optional. In-memory samples still work. */}
    setReady(true);
   });
   const {data:listener}=supabase.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT')router.replace('/login');});
   return()=>{active=false;listener.subscription.unsubscribe();};
  },[router]);
- const change=(patch:Partial<DemoApplication>,message:string)=>{
-  setRows(previous=>{const next=previous.map(row=>row.id===selected?{...row,...patch,history:[message,...row.history].slice(0,40)}:row);
-   try{sessionStorage.setItem(DEMO_STORAGE_KEY,JSON.stringify(next));}catch{}return next;});
-  setFeedback(message);setReason('');
+ const commitRows=(next:DemoApplication[])=>{
+  rowsRef.current=next;setRows(next);
+  try{sessionStorage.setItem(DEMO_STORAGE_KEY,JSON.stringify(next));}
+  catch{setFeedback('Browser storage is unavailable. Samples will last only until this page reloads.');}
  };
- const reset=()=>{setRows(initialDemoApplications());setSelected('sample-01');setReason('');setFeedback('Sample data reset · 가상 데이터 초기화 완료');try{sessionStorage.removeItem(DEMO_STORAGE_KEY);}catch{}};
+ const addSample=(input:DemoSubmission)=>{
+  if(rowsRef.current.length>=100)throw new Error('Sample limit reached. Reset samples to continue.');
+  const sample=createDemoApplication(input,rowsRef.current);
+  setFeedback('Demo application added · '+sample.reference);setSearch('');
+  commitRows([sample,...rowsRef.current]);setSelected(sample.id);
+  return sample.reference;
+ };
+ const change=(patch:Partial<DemoApplication>,message:string)=>{
+  setFeedback(message);setReason('');
+  commitRows(rowsRef.current.map(row=>row.id===current.id?{...row,...patch,history:[message,...row.history].slice(0,40)}:row));
+ };
+ const reset=()=>{commitRows(initialDemoApplications());setSelected('sample-01');setReason('');setSearch('');setFeedback('Sample data reset · 가상 데이터 초기화 완료');};
  const signOut=async()=>{await supabase.auth.signOut();router.replace('/login');};
  if(!ready)return <main className="dashboard-page"><div className="wrap work-main"><h1>Demo workspace</h1>{authError?<><p role="alert">{authError}</p><Link className="work-button" href="/login?next=%2Fdemo%2Fdashboard">Log in</Link></>:<p role="status">Checking your demo account…</p>}</div></main>;
  const visible=admin?rows:rows.filter(row=>row.name==='Demo Tenant');
@@ -65,7 +66,7 @@ export default function DemoWorkspace({params}:{params:{view?:string[]}}) {
     <div className="showcase-actions">{view==='apply'?<Link className="work-button" href="/demo/dashboard"><ArrowLeft size={16}/> Dashboard</Link>:<><Link className="work-button" href={admin?'/demo/dashboard':'/demo/admin'}>{admin?'사용자 화면 보기':'View admin demo'} <ArrowRight size={16}/></Link><button className="work-button" onClick={reset}><RotateCcw size={16}/>{admin?'초기화':'Reset samples'}</button></>}</div>
    </div>
    <p className="showcase-feedback" role="status" aria-live="polite">{feedback}</p>
-   {view==='apply'?<><p className="work-hint">All steps are optional. Use imaginary information only; submitting this walkthrough does not create an application.</p><ApplicationDemo/></>:<>
+   {view==='apply'?<><p className="work-hint">All steps are optional. Submitting adds a virtual application to this tab’s user and admin lists. No real application or file is sent.</p><ApplicationDemo onSubmit={addSample}/></>:<>
     {!admin&&<div className="work-focus"><JourneyPanel journey={journey(current)}><Link className="work-button work-button-primary" href="/demo/apply">Try a new application</Link></JourneyPanel></div>}
     {admin&&<label className="showcase-search">신청 검색<input value={search} onChange={e=>setSearch(e.target.value)} placeholder="이름·이메일·신청번호"/></label>}
     <div className="showcase-grid">
@@ -75,7 +76,7 @@ export default function DemoWorkspace({params}:{params:{view?:string[]}}) {
      <section className="work-sheet showcase-detail" aria-label={admin?'가상 신청 상세':'Sample application details'}>
       <div className="work-section-heading"><h2>{current.reference}</h2><StatusBadge journey={journey(current,admin)}/></div>
       {admin&&<JourneyPanel journey={journey(current,true)} locale="ko"/>}
-      <dl><div><dt>{admin?'신청자':'Applicant'}</dt><dd>{current.name}<br/>{current.email}</dd></div><div><dt>{admin?'목적물':'Property'}</dt><dd>{current.address}</dd></div><div><dt>{admin?'계약기간':'Lease dates'}</dt><dd>2026-11-01 — 2027-10-31</dd></div><div><dt>{admin?'월세':'Monthly rent'}</dt><dd>{money(current.rent)}</dd></div><div><dt>{admin?'이용료':'Service fee'}</dt><dd>{admin?'미확정 · 시연 비용 없음':'To be confirmed · no charge'}</dd></div><div><dt>{admin?'임대인 / 계좌':'Landlord / account'}</dt><dd>Sample Landlord · Example Bank · ••••0000</dd></div><div><dt>{admin?'계약서':'Contract'}</dt><dd><a href="/demo/sample-contract.svg" target="_blank" rel="noopener noreferrer">{admin?'견본 계약서 열기':'Open sample contract'}</a><br/><a href="/demo/sample-contract.svg" download="sample-contract.svg">{admin?'견본 다운로드':'Download sample'}</a></dd></div></dl>
+      <dl><div><dt>{admin?'신청자':'Applicant'}</dt><dd>{current.name}<br/>{current.email}</dd></div><div><dt>{admin?'목적물':'Property'}</dt><dd>{current.address}</dd></div><div><dt>{admin?'계약기간':'Lease dates'}</dt><dd>2026-11-01 — 2027-10-31</dd></div><div><dt>{admin?'월세':'Monthly rent'}</dt><dd>{money(current.rent)}</dd></div><div><dt>{admin?'이용료':'Service fee'}</dt><dd>{admin?'미확정 · 시연 비용 없음':'To be confirmed · no charge'}</dd></div><div><dt>{admin?'임대인 / 계좌':'Landlord / account'}</dt><dd>{current.landlord||'Sample Landlord'} · {current.bank||'Example Bank'} · ••••{current.accountLast4||'0000'}</dd></div><div><dt>{admin?'계약서':'Contract'}</dt><dd>{current.contractName&&<><span>{current.contractName} · {admin?'파일명만 보관 · 실제 업로드 없음':'filename only · not uploaded'}</span><br/></>}<a href="/demo/sample-contract.svg" target="_blank" rel="noopener noreferrer">{admin?'견본 계약서 열기':'Open sample contract'}</a><br/><a href="/demo/sample-contract.svg" download="sample-contract.svg">{admin?'견본 다운로드':'Download sample'}</a></dd></div></dl>
       {admin?<div className="showcase-controls">
        {current.status==='pending_review'&&<><label>반려 사유 (선택)<input value={reason} onChange={e=>setReason(e.target.value)} maxLength={200} placeholder="가상 사유만 입력"/></label><div className="showcase-actions"><button className="work-button work-button-primary" onClick={()=>change({status:'approved'},'Sample Reviewer · 심사 승인 (시연)')}>승인 체험</button><button className="work-button" onClick={()=>change({status:'rejected'},'Sample Reviewer · 심사 반려 (시연)'+(reason.trim()?': '+reason.trim():''))}>반려 체험</button></div></>}
        {current.status==='approved'&&<><h3>결제·지급 시뮬레이션</h3><p>운영 API를 호출하지 않으며, 가상 상태만 변경됩니다.</p><div className="showcase-actions">
