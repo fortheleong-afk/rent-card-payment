@@ -18,14 +18,14 @@ export function getJourney(status:string, order:OrderSummary|null|undefined, loc
   ['Under review','Your application is with the review team.','No action needed. Check your submitted details or wait for an update.'],
   ['심사 대기','계약서와 신청 정보를 확인해야 합니다.','계약서를 열고 금액·임대인 정보를 검토한 뒤 승인 또는 반려하세요.']);
  if(status==='rejected')return make('rejected','warning',0,
-  ['Application declined','This application did not pass review.','Read the review reason below. You can submit a new application with corrected details.'],
+  ['Application declined','This application did not pass review.','Check the review reason in your application. You can submit corrected details in a new application.'],
   ['심사 반려','해당 신청의 심사가 종료됐습니다.','반려 사유와 제출 자료를 확인하세요. 새 신청은 별도로 접수됩니다.']);
  if(status==='cancelled')return make('cancelled','neutral',0,
   ['Application cancelled','This application is closed.','Start a new application if you still need to arrange rent payment.'],
   ['신청 취소','사용자가 신청을 취소했습니다.','추가 심사 작업이 없습니다. 기존 자료와 이력은 확인할 수 있습니다.']);
  if(status==='approved'){
   if(!order)return make('ready','info',1,
-   ['Approved · ready for a test order','Your application has passed review.','Create a test order below to confirm the amount. This will not charge your card.'],
+   ['Approved · ready for a test order','Your application has passed review.','Create a test order in your application to confirm the amount. This will not charge your card.'],
    ['주문 생성 필요','심사가 승인됐으며 아직 결제 주문이 없습니다.','금액을 확인하고 테스트 주문을 생성하세요.']);
   if(order.payment_status==='refunded'||order.payment_status==='cancelled')return make('closed','neutral',1,
    [order.payment_status==='refunded'?'Test refund complete':'Test payment cancelled','This test order is closed.','No further action is needed. Contact support if you have questions.'],
@@ -38,7 +38,7 @@ export function getJourney(status:string, order:OrderSummary|null|undefined, loc
    ['테스트 결제 대기','주문이 생성됐으며 아직 결제되지 않았습니다.','시뮬레이터를 열어 결제 성공·실패·취소를 테스트하세요.']);
   if(order.payment_status==='paid'){
    if(order.payout_status==='completed')return make('complete','success',3,
-    ['Test payout complete','The payment and landlord payout simulation are complete.','Review the test history below. No real money was transferred.'],
+    ['Test payout complete','The payment and landlord payout simulation are complete.','You can review the test history in your application. No real money was transferred.'],
     ['테스트 지급 완료','결제와 임대인 지급 시뮬레이션이 완료됐습니다.','추가 처리 없이 이력을 확인하거나 새로운 테스트를 위해 초기화하세요.']);
    if(order.payout_status==='failed'||order.payout_status==='cancelled')return make('payout_attention','warning',2,
     [order.payout_status==='failed'?'Test payout failed':'Test payout cancelled','Test payment is complete, but the landlord payout is not complete.','Do not pay again. The operator needs to review the payout.'],

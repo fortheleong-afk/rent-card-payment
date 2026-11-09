@@ -32,7 +32,7 @@ export default function ApplicationDetail({params}:{params:{id:string}}){
   <Link href="/applications" className="work-back"><ArrowLeft size={16}/> All applications</Link>
   {!row?<div className="work-empty" role="status"><h1>{message?'Application unavailable':'Loading your application…'}</h1><p>{message}</p><Link href="/dashboard">Return to dashboard</Link></div>:<>
    <div className="work-page-heading"><div><h1>Rent application</h1><p>{row.application_number||row.id.slice(0,8).toUpperCase()} · Submitted {new Date(row.created_at).toLocaleDateString('en-GB')}</p></div></div>
-   <PaymentOrder applicationId={row.id} approved={row.status==='approved'} applicationStatus={row.status}/>
+   <PaymentOrder key={row.id} applicationId={row.id} approved={row.status==='approved'} applicationStatus={row.status}/>
    {row.rejection_reason&&<div className="work-error"><strong>Review reason</strong><p>{row.rejection_reason}</p></div>}
    <div className="work-detail-columns"><section className="work-sheet"><h2>Application details</h2><dl className="work-facts">
     <div><dt>Property address</dt><dd>{row.property_address||'Not provided'}</dd></div><div><dt>Lease period</dt><dd>{row.contract_start_date||'—'} — {row.contract_end_date||'—'}</dd></div>
