@@ -1,65 +1,42 @@
 'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { ArrowRight, Clock3, FileText, LogOut, Plus, ShieldCheck } from 'lucide-react';
+import { useEffect,useState } from 'react';
+import { ArrowRight,Plus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-
-type Application = {
-  id: string;
-  application_number: string | null;
-  rent_amount: number;
-  service_fee: number;
-  total_amount: number;
-  status: string;
-  created_at: string;
-};
-
-const money = (value: number) => `₩${new Intl.NumberFormat('ko-KR').format(value)}`;
-const statusLabel: Record<string, string> = {
-  pending_review: '심사 대기', approved: '심사 승인', rejected: '심사 반려',
-  payment_pending: '테스트 결제 대기', payment_completed: '테스트 결제 완료',
-  transfer_pending: '테스트 송금 대기', transfer_completed: '테스트 송금 완료', completed: '처리 완료',
-  cancelled: '신청 취소',
-};
-
-export default function Dashboard() {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const load = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData.session?.user;
-      if (!user) { window.location.href = '/login'; return; }
-      setEmail(user.email ?? '');
-      const { data: profile } = await supabase.from('profiles').select('full_name,phone').eq('id', user.id).maybeSingle();
-      setName(profile?.full_name ?? user.user_metadata?.full_name ?? '');
-      const { data, error: queryError } = await supabase.from('rent_applications').select('id,application_number,rent_amount,service_fee,total_amount,status,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
-      if (queryError) setError('신청 내역을 불러오지 못했습니다.');
-      setApplications(data ?? []);
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  const logout = async () => { await supabase.auth.signOut(); window.location.href = '/'; };
-
-  return <main className="dashboard-page">
-    <div className="test-banner"><span className="pulse" />현재 테스트 모드예요 · 실제 결제와 송금은 실행되지 않습니다</div>
-    <header><div className="wrap nav"><Link href="/" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link><div className="dashboard-actions"><span>{email}</span><button onClick={logout}><LogOut size={14}/> 로그아웃</button></div></div></header>
-    <section className="dashboard-main wrap">
-      <div className="dashboard-heading"><div><div className="eyebrow">MY DASHBOARD</div><h1>{name ? '안녕하세요, ' + name + '님' : '안녕하세요, 반가워요'}</h1><p>월세 신청 현황을 한눈에 확인하세요.</p></div><Link href="/profile" className="secondary">프로필 관리</Link><Link href="/applications/new" className="primary"><Plus size={17}/> 월세 신청하기</Link></div>
-      <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>안전한 테스트 서비스</strong><span>금융사 계약 전까지 실제 카드 승인과 계좌 송금은 발생하지 않습니다.</span></div></div>
-      <div className="dashboard-grid"><div className="dashboard-card"><span>전체 신청</span><strong>{applications.length}건</strong><small>내 월세 신청</small></div><div className="dashboard-card"><span>최근 상태</span><strong>{applications[0] ? statusLabel[applications[0].status] ?? applications[0].status : '신청 전'}</strong><small>가장 최근 신청</small></div><div className="dashboard-card"><span>최근 총액</span><strong>{applications[0] ? money(applications[0].total_amount) : '₩0'}</strong><small>월세 + 서비스 이용료</small></div></div>
-      <div className="dashboard-section"><div className="dashboard-section-title"><h2>최근 신청 내역</h2><Link href="/applications">전체 보기 <ArrowRight size={14}/></Link></div>
-        {loading ? <div className="dashboard-empty">신청 내역을 불러오는 중...</div> : error ? <div className="dashboard-empty">{error}</div> : applications.length === 0 ? <div className="dashboard-empty"><FileText size={30}/><strong>아직 신청 내역이 없습니다.</strong><span>첫 월세 신청을 시작해보세요.</span><Link href="/applications/new" className="secondary">월세 신청하기</Link></div> : <div className="application-list">{applications.slice(0, 5).map(application => <Link href={`/applications/${application.id}`} className="application-row" key={application.id}><div><strong>{money(application.rent_amount)}</strong><span>{new Date(application.created_at).toLocaleDateString('ko-KR')} · 신청번호 {application.application_number || application.id.slice(0, 8).toUpperCase()}</span></div><div className="application-status"><span>{statusLabel[application.status] ?? application.status}</span><b>{money(application.total_amount)}</b></div></Link>)}</div>}
-      </div>
-      <div className="dashboard-help"><div><strong>다음 단계가 궁금하신가요?</strong><span>수수료, 보안, 신청 처리 기준을 확인할 수 있습니다.</span></div><div className="dashboard-help-links"><Link href="/fees">수수료 안내</Link><Link href="/contact">문의하기</Link></div></div>
-      <p className="dashboard-foot"><Clock3 size={13}/> 심사 및 상태 변경은 테스트 운영자가 확인 후 반영합니다.</p>
-    </section>
-  </main>;
+import { getJourney, OrderSummary } from '../../lib/workflow';
+import { JourneyPanel,StatusBadge,TestNotice } from '../../components/WorkflowStatus';
+import AccountHeader from '../../components/AccountHeader';
+type Application={id:string;application_number:string|null;rent_amount:number;status:string;created_at:string};
+export default function Dashboard(){
+ const [name,setName]=useState(''),[completeProfile,setCompleteProfile]=useState(true),[applications,setApplications]=useState<Application[]>([]),[orders,setOrders]=useState<Record<string,OrderSummary>>({});
+ const [loading,setLoading]=useState(true),[error,setError]=useState('');
+ const load=async()=>{
+  setLoading(true);setError('');
+  try{
+   const {data:s,error:authError}=await supabase.auth.getSession();if(authError)throw authError;const user=s.session?.user;if(!user){window.location.href='/login';return;}
+   const [profile,result,orderResult]=await Promise.all([
+    supabase.from('profiles').select('full_name,phone').eq('id',user.id).maybeSingle(),
+    supabase.from('rent_applications').select('id,application_number,rent_amount,status,created_at').eq('user_id',user.id).order('created_at',{ascending:false}),
+    supabase.from('payment_orders').select('application_id,payment_status,payout_status').eq('user_id',user.id),
+   ]);
+   if(result.error)throw result.error;if(orderResult.error)throw orderResult.error;
+   setName(profile.data?.full_name??'');setCompleteProfile(Boolean(profile.data?.full_name&&profile.data?.phone));
+   setOrders(Object.fromEntries((orderResult.data??[]).map(o=>[o.application_id,o])));setApplications(result.data??[]);
+  }catch{setError('We could not load your latest status. Please try again.');}finally{setLoading(false);}
+ };
+ useEffect(()=>{load();},[]);
+ const priority=(a:Application)=>({payout_attention:0,payment_failed:1,ready:2,payment:3,payout:4,payout_processing:4,review:5} as Record<string,number>)[getJourney(a.status,orders[a.id]).key]??10;
+ const focus=[...applications].sort((a,b)=>priority(a)-priority(b))[0];
+ return <main className="dashboard-page work-page"><AccountHeader/><div className="wrap work-main">
+  <div className="work-page-heading"><div><h1>{name?`Hello, ${name}`:'Your rent dashboard'}</h1><p>Track your rent application and see what happens next.</p></div><Link href="/applications/new" className="work-button work-button-primary"><Plus size={17}/> New application</Link></div>
+  <TestNotice/>
+  {loading?<div className="work-loading" role="status">Loading your rent activity…</div>:error?<div className="work-error" role="alert"><p>{error}</p><button className="work-button" onClick={load}>Try again</button></div>:<>
+   {!completeProfile&&<div className="work-profile-note"><p>Add your name and contact number before your next application.</p><Link href="/profile">Complete profile <ArrowRight size={15}/></Link></div>}
+   {focus?<div className="work-focus"><div className="work-section-heading"><h2>{priority(focus)<5?'Your next step':'Latest activity'}</h2><span>{focus.application_number||focus.id.slice(0,8).toUpperCase()}</span></div><JourneyPanel journey={getJourney(focus.status,orders[focus.id])}><Link className="work-button work-button-primary" href={`/applications/${focus.id}`}>View application <ArrowRight size={16}/></Link></JourneyPanel></div>:<section className="work-empty"><h2>Your first rent application starts here</h2><p>Have your lease, monthly rent amount and landlord’s Korean bank account ready.</p><Link className="work-button work-button-primary" href="/applications/new">Start an application <ArrowRight size={16}/></Link></section>}
+   <section className="work-sheet work-applications"><div className="work-section-heading"><h2>Your applications <span className="work-count">{applications.length}</span></h2><Link href="/applications">View all <ArrowRight size={15}/></Link></div>
+    {applications.length===0?<p className="work-hint">Your submitted applications will appear here.</p>:<div className="work-application-list">{applications.slice(0,5).map(a=><Link key={a.id} href={`/applications/${a.id}`} className="work-application-row"><div><strong>₩{Number(a.rent_amount).toLocaleString('ko-KR')} <small>/ month</small></strong><span>{a.application_number||a.id.slice(0,8).toUpperCase()} · {new Date(a.created_at).toLocaleDateString('en-GB')}</span></div><div><StatusBadge journey={getJourney(a.status,orders[a.id])}/><ArrowRight size={16}/></div></Link>)}</div>}
+   </section>
+  </>}
+  <footer className="work-footer"><div><Link href="/contact">Need help?</Link><Link href="/fees">Fees</Link><Link href="/profile">Manage profile</Link></div><button type="button" className="work-text-button" onClick={async()=>{await supabase.auth.signOut();window.location.href='/';}}>Sign out</button></footer>
+ </div></main>;
 }

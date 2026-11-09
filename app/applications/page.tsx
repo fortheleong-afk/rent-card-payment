@@ -1,15 +1,23 @@
 'use client';
-
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { useEffect,useState } from 'react';
+import { ArrowLeft,ArrowRight,Plus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-
-const money = (value: number) => `₩${new Intl.NumberFormat('ko-KR').format(value)}`;
-const labels: Record<string, string> = { pending_review: '심사 대기', approved: '심사 승인', rejected: '심사 반려', cancelled: '신청 취소', completed: '처리 완료', payment_pending: '테스트 결제 대기', transfer_pending: '테스트 송금 대기' };
-
-export default function Applications() {
-  const [rows, setRows] = useState<any[]>([]);
-  useEffect(() => { (async () => { const { data: session } = await supabase.auth.getSession(); if (!session.session) { window.location.href = '/login'; return; } const { data } = await supabase.from('rent_applications').select('*').eq('user_id', session.session.user.id).order('created_at', { ascending: false }); setRows(data ?? []); })(); }, []);
-  return <main className="dashboard-page"><header><div className="wrap nav"><Link href="/dashboard" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link></div></header><section className="dashboard-main wrap"><Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> 대시보드</Link><div className="dashboard-heading"><div><div className="eyebrow">APPLICATIONS</div><h1>신청 내역</h1><p>내 월세 신청과 처리 상태를 확인하세요.</p></div></div><div className="dashboard-section"><div className="application-list">{rows.length === 0 ? <div className="dashboard-empty">신청 내역이 없습니다.</div> : rows.map(row => <Link href={`/applications/${row.id}`} className="application-row" key={row.id}><div><strong>{money(row.rent_amount)}</strong><span>{new Date(row.created_at).toLocaleDateString('ko-KR')} · 신청번호 {row.application_number || row.id.slice(0, 8).toUpperCase()} · {row.landlord_name || '임대인 정보 미입력'}</span></div><div className="application-status"><span>{labels[row.status] ?? row.status}</span><b><ChevronRight size={16}/></b></div></Link>)}</div></div></section></main>;
+import { getJourney,OrderSummary } from '../../lib/workflow';
+import { StatusBadge,TestNotice } from '../../components/WorkflowStatus';
+import AccountHeader from '../../components/AccountHeader';
+type Application={id:string;application_number:string|null;rent_amount:number;status:string;created_at:string;landlord_name:string|null};
+export default function Applications(){
+ const [rows,setRows]=useState<Application[]>([]),[orders,setOrders]=useState<Record<string,OrderSummary>>({}),[loading,setLoading]=useState(true),[error,setError]=useState('');
+ const load=async()=>{
+  setLoading(true);setError('');try{
+   const {data:s}=await supabase.auth.getSession();const user=s.session?.user;if(!user){window.location.href='/login';return;}
+   const [apps,os]=await Promise.all([supabase.from('rent_applications').select('id,application_number,rent_amount,status,created_at,landlord_name').eq('user_id',user.id).order('created_at',{ascending:false}),supabase.from('payment_orders').select('application_id,payment_status,payout_status').eq('user_id',user.id)]);
+   if(apps.error||os.error)throw new Error('load');setRows(apps.data??[]);setOrders(Object.fromEntries((os.data??[]).map(o=>[o.application_id,o])));
+  }catch{setError('Could not load your applications. Try again.');}finally{setLoading(false);}
+ };
+ useEffect(()=>{load();},[]);
+ return <main className="dashboard-page work-page"><AccountHeader/><section className="wrap work-main"><Link className="work-back" href="/dashboard"><ArrowLeft size={16}/> Dashboard</Link><div className="work-page-heading"><div><h1>Your applications</h1><p>Review, payment and payout status in one place.</p></div><Link href="/applications/new" className="work-button work-button-primary"><Plus size={17}/> New application</Link></div><TestNotice/>
+  {loading?<div className="work-loading" role="status">Loading applications…</div>:error?<div className="work-error" role="alert"><p>{error}</p><button className="work-button" onClick={load}>Try again</button></div>:rows.length===0?<div className="work-empty"><h2>No applications yet</h2><p>Start with your lease and landlord’s deposit account.</p><Link href="/applications/new" className="work-button">Start an application</Link></div>:<div className="work-sheet work-application-list">{rows.map(row=><Link href={`/applications/${row.id}`} className="work-application-row" key={row.id}><div><strong>₩{Number(row.rent_amount).toLocaleString('ko-KR')} <small>/ month</small></strong><span>{row.application_number||row.id.slice(0,8).toUpperCase()} · {new Date(row.created_at).toLocaleDateString('en-GB')}</span><span>{row.landlord_name||'Landlord not provided'}</span></div><div><StatusBadge journey={getJourney(row.status,orders[row.id])}/><ArrowRight size={16}/></div></Link>)}</div>}
+ </section></main>;
 }

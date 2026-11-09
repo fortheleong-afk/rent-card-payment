@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { getJourney, statusText } from '../lib/workflow';
+import { JourneyPanel, JourneyProgress, TestNotice } from './WorkflowStatus';
+import Link from 'next/link';
 
 type Order = { id:string; version:number; order_number:string; total_amount:number; payment_status:string; payout_status:string };
 type OrderEvent = { id:string; action:string; from_payment:string; to_payment:string; from_payout:string; to_payout:string; changed_by:string; created_at:string; version:number };
@@ -26,7 +29,8 @@ function availableActions(o:Order):string[] {
   return list;
 }
 
-export default function PaymentOrder({applicationId, approved, simulator=false}: {applicationId:string; approved:boolean; simulator?:boolean}) {
+export default function PaymentOrder({applicationId, approved, applicationStatus, simulator=false, onOrderChange}: {applicationId:string; approved:boolean; applicationStatus?:string; simulator?:boolean; onOrderChange?:()=>void}) {
+  const locale=simulator?'ko':'en';
   const [order,setOrder]=useState<Order|null>(null);
   const [events,setEvents]=useState<OrderEvent[]>([]);
   const [busy,setBusy]=useState(true);
@@ -59,7 +63,7 @@ export default function PaymentOrder({applicationId, approved, simulator=false}:
     try{
       const {data,error}=await supabase.rpc('create_test_payment_order',{p_application_id:applicationId});
       if(error)throw error;if(!data)throw new Error('주문을 확인할 수 없습니다.');
-      await load();
+      await load(); onOrderChange?.();
     }catch(e){setError(messageOf(e));}finally{running.current=false;setBusy(false);}
   };
   const simulate=async(action:string, previous?:Attempt)=>{
@@ -75,34 +79,42 @@ export default function PaymentOrder({applicationId, approved, simulator=false}:
       }
       if(!data){setRetry(attempt);throw new Error('결과를 확인할 수 없습니다. 동일 요청으로 다시 확인해주세요.');}
       setOrder(data as Order);setRetry(null);setResetConfirm(false);setNotice(`${actions[action]} 테스트를 처리했습니다. 실제 결제·송금은 없습니다.`);
-      await load();
+      await load(); onOrderChange?.();
     }catch(e){
       const code=e&&typeof e==='object'&&'code' in e?String(e.code):'';
       if(!['22023','42501','40001'].includes(code))setRetry(attempt);
       setError(messageOf(e));
     }finally{running.current=false;setBusy(false);}
   };
-  return <section className="detail-history" aria-label="테스트 결제 주문">
-    <h2>결제·지급 진행 상태</h2>
-    <p>테스트 모드 · 실제 결제와 송금은 실행되지 않습니다.</p>
-    {busy&&<p role="status">확인 중…</p>}
-    {error&&<p role="alert">{error}</p>}
-    {notice&&<p role="status">{notice}</p>}
-    {order ? <>
-      <dl><dt>주문번호</dt><dd style={{overflowWrap:'anywhere'}}>{order.order_number}</dd>
-      <dt>결제 예정 금액</dt><dd>₩{Number(order.total_amount).toLocaleString('ko-KR')} (테스트 이용료 ₩0 · 실제 요금 미정)</dd>
-      <dt>결제 상태</dt><dd>{paymentLabels[order.payment_status]||order.payment_status}</dd>
-      <dt>임대인 지급 상태</dt><dd>{payoutLabels[order.payout_status]||order.payout_status}</dd></dl>
-      {simulator&&approved&&<div aria-label="관리자 테스트 시뮬레이터">
-        <h3>관리자 테스트 시뮬레이터</h3>
-        <p>결제 성공 후 지급을 시작할 수 있습니다. 지급 취소는 결제를 환불하지 않습니다. 지급 처리 중·완료 후에는 결제 취소가 차단됩니다.</p>
-        {retry ? <button type="button" className="secondary" disabled={busy} onClick={()=>simulate(retry.action,retry)}>동일 요청 재확인</button> : <div style={{display:'flex',flexWrap:'wrap',gap:8}}>{availableActions(order).map(action=><button type="button" className="secondary" key={action} disabled={busy} onClick={()=>simulate(action)}>{actions[action]} 테스트</button>)}</div>}
-        {!retry&&(order.payment_status!=='pending'||order.payout_status!=='not_ready')&&(!resetConfirm ? <button type="button" className="secondary" disabled={busy} onClick={()=>setResetConfirm(true)}>다시 테스트하기</button> : <div><p>결제 대기 상태로 되돌립니다. 이전 이력과 알림은 보존됩니다.</p><button type="button" className="secondary" disabled={busy} onClick={()=>simulate('reset')}>초기화 확인</button> <button type="button" className="secondary" disabled={busy} onClick={()=>setResetConfirm(false)}>닫기</button></div>)}
-      </div>}
-      <h3>결제·지급 테스트 이력 (최근 50건)</h3>
-      {historyError&&<p role="alert">{historyError}</p>}
-      {!historyError&&events.length===0&&<p>아직 테스트 상태 변경 이력이 없습니다.</p>}
-      {events.map(e=><div className="history-item" key={e.id}><span>{new Date(e.created_at).toLocaleString('ko-KR')} · #{e.version}</span><b>{actions[e.action]||e.action}</b><small>결제: {paymentLabels[e.from_payment]} → {paymentLabels[e.to_payment]} / 지급: {payoutLabels[e.from_payout]} → {payoutLabels[e.to_payout]}</small>{simulator&&<small>처리자 ID: {e.changed_by}</small>}</div>)}
-    </> : !busy&&!error&&(approved ? <button type="button" className="secondary" onClick={create}>테스트 결제 주문 생성</button> : <p>심사 승인 후 결제 주문을 생성할 수 있습니다.</p>)}
+  const journey=getJourney(applicationStatus??(approved?'approved':'pending_review'),order,locale);
+  const buttons=order?availableActions(order):[];
+  return <section className="work-order" aria-label={simulator?'테스트 결제 주문':'Payment and payout'}>
+    <TestNotice locale={locale}/>
+    {busy&&!order ? <div className="work-loading" role="status">{simulator?'처리 상태를 확인하고 있습니다…':'Checking your current status…'}</div> : <>
+      {!error||order ? <JourneyPanel journey={journey} locale={locale}>
+        {!order&&approved&&!error&&<button type="button" className="work-button work-button-primary" onClick={create} disabled={busy}>{simulator?'테스트 주문 생성':'Create test order'}</button>}
+        {!simulator&&['payment_failed','payout_attention'].includes(journey.key)&&<Link className="work-button" href="/contact">Contact support</Link>}
+      </JourneyPanel> : null}
+      {order&&<JourneyProgress journey={journey} locale={locale}/>}
+    </>}
+    {error&&<div className="work-error" role="alert"><strong>{simulator?'요청을 완료하지 못했습니다':'We could not finish that request'}</strong><p>{error}</p>{!retry&&<button type="button" className="work-button" disabled={busy} onClick={()=>{setBusy(true);setError('');load().catch(e=>setError(messageOf(e))).finally(()=>setBusy(false));}}>{simulator?'최신 상태 다시 확인':'Refresh status'}</button>}</div>}
+    {busy&&order&&<p className="work-feedback" role="status">{simulator?'처리 결과를 확인 중입니다…':'Checking the result…'}</p>}
+    {notice&&<p className="work-feedback" role="status">{notice}</p>}
+    {order&&<>
+      <div className="work-order-facts"><div><span>{simulator?'주문번호':'Order reference'}</span><strong>{order.order_number}</strong></div><div><span>{simulator?'테스트 금액':'Test amount'}</span><strong>₩{Number(order.total_amount).toLocaleString('ko-KR')}</strong><small>{simulator?'테스트 이용료 0원 · 실제 이용료 미정':'Test fee ₩0 · Live pricing to be confirmed'}</small></div></div>
+      <dl className="work-state-pair"><div><dt>{simulator?'결제 상태':'Payment status'}</dt><dd>{statusText(order.payment_status,'payment',locale)}</dd></div><div><dt>{simulator?'임대인 지급 상태':'Landlord payout status'}</dt><dd>{statusText(order.payout_status,'payout',locale)}</dd></div></dl>
+      {simulator&&approved&&<details className="work-disclosure work-simulator">
+        <summary><span>테스트 시뮬레이터</span><small>관리자 전용 · 가상 상태 변경</small></summary>
+        <div className="work-disclosure-body"><p>현재 상태에서 가능한 테스트만 표시합니다. 지급 취소는 결제를 환불하지 않습니다. 지급 처리 중·완료 후에는 결제 취소가 차단됩니다.</p>
+        {retry ? <button type="button" className="work-button work-button-primary" disabled={busy} onClick={()=>simulate(retry.action,retry)}>동일 요청 재확인</button> : <div className="work-sim-buttons">{buttons.map((action,i)=><button type="button" className={`work-button ${i===0?'work-button-primary':''}`} key={action} disabled={busy} onClick={()=>simulate(action)}>{actions[action]} 테스트</button>)}</div>}
+        {!retry&&(order.payment_status!=='pending'||order.payout_status!=='not_ready')&&(!resetConfirm ? <button type="button" className="work-text-button" disabled={busy} onClick={()=>setResetConfirm(true)}>테스트를 처음부터 다시 시작</button> : <div className="work-reset"><p>결제 대기로 되돌립니다. 이전 이력과 알림은 보존됩니다.</p><button type="button" className="work-button" disabled={busy} onClick={()=>simulate('reset')}>초기화 확인</button> <button type="button" className="work-text-button" disabled={busy} onClick={()=>setResetConfirm(false)}>닫기</button></div>)}
+        </div>
+      </details>}
+      <details className="work-disclosure"><summary><span>{simulator?'결제·지급 이력':'Payment & payout history'}</span><small>{simulator?'최근 50건까지': 'Up to 50 recent events'} · {events.length}</small></summary><div className="work-disclosure-body">
+        {historyError&&<p role="alert">{simulator?historyError:'Could not load the history. Refresh the page to try again.'}</p>}
+        {!historyError&&events.length===0&&<p>{simulator?'아직 상태 변경 이력이 없습니다.':'No payment or payout events yet.'}</p>}
+        <ol className="work-timeline">{events.map(e=><li key={e.id}><time>{new Date(e.created_at).toLocaleString(simulator?'ko-KR':'en-GB')} · #{e.version}</time><strong>{simulator?actions[e.action]||e.action:({payment_success:'Test payment succeeded',payment_failure:'Test payment failed',payment_cancel:'Test payment cancelled',payout_start:'Test payout started',payout_success:'Test payout completed',payout_failure:'Test payout failed',payout_cancel:'Test payout cancelled',payout_retry:'Test payout retry prepared',reset:'Test reset'} as Record<string,string>)[e.action]||e.action}</strong><p>{statusText(e.from_payment,'payment',locale)} → {statusText(e.to_payment,'payment',locale)}<br/>{statusText(e.from_payout,'payout',locale)} → {statusText(e.to_payout,'payout',locale)}</p>{simulator&&<small>처리자 ID: {e.changed_by}</small>}</li>)}</ol>
+      </div></details>
+    </>}
   </section>;
 }
