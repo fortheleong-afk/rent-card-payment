@@ -129,6 +129,7 @@
 .work-admin .admin-logout{color:#52647b}
 .work-admin .admin-main{max-width:1440px;min-width:0;padding:36px 32px;flex:1}
 .work-admin-mobile-nav{display:none}
+.admin-mobile-filter{display:none}
 .work-admin .work-page-heading h1{font-size:26px}
 .admin-refresh{display:flex;align-items:center;gap:12px;flex:none}
 .admin-refresh>span{font-size:12px;color:#52647b}
@@ -220,16 +221,21 @@
  .work-admin-mobile-nav nav a,.work-admin-mobile-nav nav button{font-size:12px;min-height:36px}
  .work-admin .work-page-heading{gap:10px;margin-bottom:14px;align-items:center}
  .work-admin .work-page-heading h1{font-size:23px;margin-bottom:6px}
- .work-admin .work-page-heading p{font-size:12px}
- .admin-refresh{width:100%;justify-content:space-between;gap:8px}
+ .work-admin .work-page-heading p{display:none}
+ .admin-refresh{width:auto;gap:8px}
  .admin-refresh .work-button{min-height:40px;padding:8px 12px}
- .admin-refresh>span{font-size:12px}
+ .admin-refresh>span{display:none}
  .work-admin .work-test-note{margin-bottom:12px}
  .admin-list-toolbar{gap:10px;flex-wrap:wrap}
  .admin-list-toolbar .work-search{max-width:none;min-width:0;flex-basis:100%;gap:0}
  .admin-sort{width:100%;justify-content:space-between}
  .admin-sort select{flex:1;max-width:220px;font-size:14px}
  .admin-list-context{font-size:12px;line-height:1.6;padding:4px 0 12px}
+ .admin-sort-hint{display:none}
+ .admin-mobile-filter{display:flex;align-items:center;gap:12px;margin:16px 0 0}
+ .admin-mobile-filter label{font-size:13px;color:#52647b;flex:none}
+ .admin-mobile-filter select{flex:1;min-width:0;min-height:44px;border:1px solid #c2d0e0;border-radius:7px;padding:9px 12px;background:#fff;color:#263f5e;font:inherit;font-size:14px}
+ .work-admin .work-queue{display:none}
  .admin-queue-hint{font-size:12px}
  .admin-review-summary{flex-direction:column;gap:8px}
  .work-admin .work-review-evidence .work-facts{column-gap:16px}
