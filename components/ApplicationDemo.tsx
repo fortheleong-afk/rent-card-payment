@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, FileText } from 'lucide-react';
 
 const steps = ['Contract', 'Rent details', 'Deposit account', 'Test payment', 'Review'];
@@ -17,6 +17,12 @@ export default function ApplicationDemo() {
   const [bank, setBank] = useState('');
   const [account, setAccount] = useState('');
   const [landlord, setLandlord] = useState('');
+  const contentRef = useRef<HTMLDivElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    contentRef.current?.focus({ preventScroll: true });
+  }, [step, complete]);
   const shownRent = rent ? `₩${Number(rent).toLocaleString('ko-KR')}` : '₩750,000 (example)';
 
   const reset = () => { setStep(0); setComplete(false); setError(''); setFileName(''); setRent(''); setAddress(''); setBank(''); setAccount(''); setLandlord(''); };
@@ -30,7 +36,7 @@ export default function ApplicationDemo() {
     {!complete && <div className="progress demo-progress" aria-label={`Step ${step + 1} of ${steps.length}`}>
       {steps.map((label, index) => <div className={index <= step ? 'active' : ''} key={label} aria-current={index === step ? 'step' : undefined}><span>{index < step ? <Check size={14}/> : index + 1}</span><small>{label}</small></div>)}
     </div>}
-    {complete ? <div className="form-content demo-content demo-finish" role="status"><div className="success-icon"><Check size={30}/></div><h3>You've completed the demo</h3><p>This was a preview. Nothing was uploaded, submitted, or saved.</p><div className="demo-finish-actions"><button type="button" className="secondary" onClick={reset}>Try it again</button><Link className="primary" href="/dashboard">Go to my dashboard <ArrowRight size={16}/></Link></div></div> : <div className="form-content demo-content">
+    {complete ? <div ref={contentRef} tabIndex={-1} className="form-content demo-content demo-finish" role="status"><div className="success-icon"><Check size={30}/></div><h3>You've completed the demo</h3><p>This was a preview. Nothing was uploaded, submitted, or saved.</p><div className="demo-finish-actions"><button type="button" className="secondary" onClick={reset}>Try it again</button><Link className="primary" href="/dashboard">Go to my dashboard <ArrowRight size={16}/></Link></div></div> : <div ref={contentRef} tabIndex={-1} className="form-content demo-content">
       <div className="demo-notice">Interactive demo only · Do not enter real personal information. Nothing is sent or saved.</div>
       {step === 0 && <><h3>Review your lease contract</h3><p>See how you would add your contract. You can skip this step.</p><label className="demo-upload"><FileText size={26}/><strong>{fileName || 'Choose a contract file (optional)'}</strong><span>PDF, JPG or PNG · selected only on this device</span><input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFileName(e.target.files?.[0]?.name ?? '')}/></label></>}
       {step === 1 && <><h3>Enter your rent details</h3><p>Try the fields or continue with the example.</p><label>Monthly rent (KRW)<input type="number" min="1" max="1000000000" value={rent} onChange={e => setRent(e.target.value)} placeholder="750000"/></label><label>Property address<input maxLength={500} value={address} onChange={e => setAddress(e.target.value)} placeholder="Example address"/></label><div className="summary"><span>Rent</span><b>{shownRent}</b><span>Service fee</span><b>To be confirmed</b></div></>}
