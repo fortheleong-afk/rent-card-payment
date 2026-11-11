@@ -335,7 +335,7 @@
 .tenant-lease-period{display:flex;flex-wrap:wrap;gap:4px 6px}
 .tenant-lease-period>span{white-space:nowrap}
 .tenant-detail-total dd{font-size:21px;color:#183d76}
-.tenant-detail-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.tenant-detail-actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:10px}
 .tenant-detail .work-file{margin-top:18px}
 .tenant-review-history{margin-top:24px}
 .tenant-cancel-confirm{padding:22px;border:1px solid #e5c4c4;border-radius:8px;background:#fffafa;margin-top:18px}
