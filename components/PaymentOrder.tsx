@@ -95,7 +95,7 @@ export default function PaymentOrder({applicationId, approved, applicationStatus
         {!order&&approved&&!error&&<button type="button" className="work-button work-button-primary" onClick={create} disabled={busy}>{simulator?'테스트 주문 생성':'Create test order'}</button>}
         {!simulator&&['payment_failed','payout_attention'].includes(journey.key)&&<Link className="work-button" href="/contact">Contact support</Link>}
       </JourneyPanel> : null}
-      {order&&<JourneyProgress journey={journey} locale={locale}/>}
+      {(order||!simulator&&['review','ready'].includes(journey.key))&&<JourneyProgress journey={journey} locale={locale}/>}
     </>}
     {error&&<div className="work-error" role="alert"><strong>{simulator?'요청을 완료하지 못했습니다':'We could not finish that request'}</strong><p>{error}</p>{!retry&&<button type="button" className="work-button" disabled={busy} onClick={()=>{setBusy(true);setError('');load().catch(e=>setError(messageOf(e))).finally(()=>setBusy(false));}}>{simulator?'최신 상태 다시 확인':'Refresh status'}</button>}</div>}
     {busy&&order&&<p className="work-feedback" role="status">{simulator?'처리 결과를 확인 중입니다…':'Checking the result…'}</p>}

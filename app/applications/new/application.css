@@ -79,3 +79,57 @@
 .draft-save-bar strong{font-size:13px}.draft-save-bar p{font-size:12px;line-height:1.6;margin:5px 0 0;color:#526783;max-width:60ch}.draft-save-bar button{min-height:44px;flex:none;margin:0;cursor:pointer}
 .draft-warning{padding:16px 18px;background:#fffbf2;border:1px solid #e3d2ab;border-radius:8px;margin:14px 0;color:#775025;font-size:13px;line-height:1.6;overflow-wrap:anywhere}.draft-warning p{margin:6px 0 12px}.draft-warning button{min-height:44px;cursor:pointer}.draft-recovery-actions{display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:600px){.draft-save-bar{align-items:flex-start;flex-direction:column;gap:12px}.draft-save-bar button{width:100%}.draft-recovery-actions{flex-direction:column}.draft-recovery-actions button{width:100%}}
+/* Match the account dashboard while keeping the existing four-step draft flow. */
+.rent-application .dashboard-main{padding:32px 0 56px}
+.rent-application .work-page-heading{margin-bottom:18px}
+.rent-application .work-page-heading h1{font-size:27px}
+.rent-application .work-test-note{margin-bottom:16px}
+.rent-application .draft-save-bar{margin:0 0 22px;padding:14px 16px;gap:16px}
+.rent-application .draft-save-bar p{margin-top:4px;font-size:12px}
+.rent-application .draft-save-bar button{border:1px solid #bdcbdc;border-radius:7px;padding:10px 14px;color:#223c5c;background:#fff;font-size:13px;font-weight:650}
+.rent-application .application-steps{margin:22px 0 18px}
+.application-steps li>button{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.application-steps li>button:hover .step-label{text-decoration:underline;text-underline-offset:4px}
+.application-form label{display:block;line-height:1.5}
+.application-form label input,.application-form label select{display:block;margin-top:8px;font-weight:400}
+.application-form label small{display:block;margin-top:7px;line-height:1.6}
+.application-form .required{display:inline;margin-left:6px}
+.application-form .step-content{max-width:none}
+.application-form .step-heading{margin-bottom:0}
+.application-form .field-pair{gap:18px}
+.application-form .application-actions{max-width:none;padding-top:20px;margin-top:24px;border-top:1px solid #dce4ee}
+.application-form .form-summary b{text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.application-form .form-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.application-file{display:flex;align-items:flex-start;gap:12px;padding:16px;background:#f5f8fc;border-radius:7px;color:#315880;min-width:0}
+.application-file>svg{flex:none;margin-top:3px}
+.application-file>div{flex:1;min-width:0}
+.application-file strong{display:block;font-size:14px;color:#263f5e;overflow-wrap:anywhere}
+.application-file small{display:block;font-size:12px;color:#52647b;margin-top:5px;line-height:1.6}
+.application-file>.work-button{flex:none}
+.application-form .review-edit{display:block;min-height:36px;background:transparent;border:0;padding:7px 0;color:#2859a6;font:inherit;font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+.application-form .review-list dd{font-size:14px;line-height:1.6;font-variant-numeric:tabular-nums}
+.application-form .review-confirm{min-height:44px;padding:6px 0}
+.application-form .review-confirm input[type=checkbox]{margin-top:2px}
+.application-complete{gap:12px;min-height:320px;text-align:center}
+.rent-application .application-complete .primary,.rent-application .application-complete .secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;padding:10px 16px;border:1px solid #bdcbdc;border-radius:7px;background:#fff;color:#223c5c;font:inherit;font-size:13px;cursor:pointer}
+.rent-application :is(button,a,select):focus-visible{outline:2px solid #245fe0;outline-offset:3px}
+@media(max-width:600px){
+ .rent-application .dashboard-main{padding-top:24px}
+ .rent-application .work-page-heading h1{font-size:24px}
+ .rent-application .work-page-heading p{font-size:13px}
+ .rent-application .draft-save-bar{flex-direction:row;align-items:center;padding:12px;gap:12px;margin-bottom:16px}
+ .rent-application .draft-save-bar>div{min-width:0}
+ .rent-application .draft-save-bar button{width:auto;min-width:94px;font-size:12px;padding:10px}
+ .rent-application .draft-save-bar p{font-size:11px;line-height:1.5}
+ .rent-application .application-mobile-progress{margin-top:16px;font-size:13px}
+ .rent-application .application-steps{margin-top:4px}
+ .application-steps li>button{justify-content:center}
+ .application-form .step-heading h2{font-size:20px}
+ .application-form .application-actions{gap:10px}
+ .application-actions>.primary{flex:1;justify-content:center;font-size:13px}
+ .application-actions>.secondary{flex:0 0 auto;padding:12px 16px}
+ .application-file{flex-wrap:wrap}
+ .application-file>.work-button{width:100%}
+ .application-form .review-list div{padding:12px 0}
+}
+@media(prefers-reduced-motion:reduce){.rent-application *{scroll-behavior:auto!important;transition:none!important}}

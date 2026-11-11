@@ -321,3 +321,36 @@
  .tenant-dashboard .work-footer>div{gap:4px 16px}
  .tenant-dashboard .work-footer a{display:inline-flex;align-items:center;min-height:36px}
 }
+
+/* Submitted application: status first, submitted evidence next, withdrawal last. */
+.tenant-detail .work-page-heading{align-items:flex-start}
+.tenant-detail .work-page-heading h1{font-size:27px}
+.tenant-detail .work-page-heading small{display:block;font-size:12px;color:#52647b;margin-top:7px}
+.tenant-detail-nav{display:flex;flex-wrap:wrap;gap:4px 24px;border-top:1px solid #dce4ee;border-bottom:1px solid #dce4ee;padding:5px 0;margin:0 0 24px}
+.tenant-detail-nav>a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;text-decoration:none;color:#355b8c}
+.tenant-detail-nav>a:hover{text-decoration:underline;text-underline-offset:4px}
+.tenant-detail :is(#application-status,#application-details,#lease-contract,#review-history){scroll-margin-top:24px}
+.tenant-detail .work-detail-columns{align-items:start;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+.tenant-detail .work-detail-columns .work-sheet{min-width:0}
+.tenant-lease-period{display:flex;flex-wrap:wrap;gap:4px 6px}
+.tenant-lease-period>span{white-space:nowrap}
+.tenant-detail-total dd{font-size:21px;color:#183d76}
+.tenant-detail-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.tenant-detail .work-file{margin-top:18px}
+.tenant-review-history{margin-top:24px}
+.tenant-cancel-confirm{padding:22px;border:1px solid #e5c4c4;border-radius:8px;background:#fffafa;margin-top:18px}
+.tenant-cancel-confirm h2{font-size:18px;color:#773438;margin:0 0 8px}
+.tenant-cancel-confirm p{font-size:14px;color:#6e4a4d;line-height:1.65;margin:0 0 18px}
+.tenant-detail .work-cancel{align-items:flex-start}
+.tenant-detail .work-cancel p{max-width:60ch}
+@media(max-width:700px){
+ .tenant-detail .work-page-heading h1{font-size:24px}
+ .tenant-detail .tenant-refresh{width:100%;justify-content:space-between}
+ .tenant-detail-nav{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;margin-bottom:20px}
+ .tenant-detail-nav>a{font-size:12px;min-height:40px}
+ .tenant-detail .work-detail-columns{grid-template-columns:minmax(0,1fr)}
+ .tenant-detail-actions>.work-button{flex:1}
+ .tenant-detail .work-cancel>.work-button{width:100%}
+ .tenant-cancel-confirm{padding:20px}
+ .tenant-detail .work-footer{flex-wrap:wrap}
+}

@@ -2,18 +2,21 @@
 
 import Link from 'next/link';
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, FileText, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Check, ExternalLink, FileText } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { ApplicationDraft,StoredContract,emptyDraftPayload,draftSignature,draftError } from '../../../lib/application-drafts';
 import './application.css';
 
-const STEPS = ['Lease contract', 'Rent details', 'Deposit account', 'Review & submit'];
+import AccountHeader from '../../../components/AccountHeader';
+import { TestNotice } from '../../../components/WorkflowStatus';
+import { createContractLink } from '../../../lib/contracts';
+import { APPLICATION_STEPS as STEPS,BANK_OPTIONS,FIELD_IDS,bankLabel,validateApplicationStep,type ApplicationField } from '../../../lib/application-validation';
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const VALID_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const money = (value: number) => `₩${new Intl.NumberFormat('ko-KR').format(value)}`;
 const maskAccount = (value: string) => value ? `••••${value.replace(/\D/g, '').slice(-4)}` : '—';
 
-type Field = 'file' | 'address' | 'contractStart' | 'contractEnd' | 'rent' | 'landlordName' | 'bank' | 'account';
+type Field = ApplicationField;
 type Attempt = { id: string; path: string; uploaded: boolean; file:File };
 
 export default function NewApplication() {
@@ -33,6 +36,9 @@ export default function NewApplication() {
   const [uncertain, setUncertain] = useState(false);
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [complete, setComplete] = useState('');
+  const [previewing,setPreviewing]=useState(false),[previewError,setPreviewError]=useState('');
+  const focusTarget=useRef<Field|null>(null);
+  const localPreview=useRef<string|null>(null);
   const attempt = useRef<Attempt | null>(null);
   const submitting = useRef(false);
 
@@ -139,57 +145,47 @@ export default function NewApplication() {
     setMessage('');
   };
 
+  useEffect(()=>()=>{if(localPreview.current)URL.revokeObjectURL(localPreview.current);},[]);
+  useEffect(()=>{const field=focusTarget.current;if(field){document.getElementById(FIELD_IDS[field])?.focus();focusTarget.current=null;}},[step,errors]);
+  const previewFile=async()=>{
+    if(!file||previewing)return;setPreviewing(true);setPreviewError('');const preview=window.open('about:blank','_blank');if(preview)preview.opener=null;
+    try{let url:string;if(file instanceof File){if(localPreview.current)URL.revokeObjectURL(localPreview.current);url=URL.createObjectURL(file);localPreview.current=url;}else url=(await createContractLink(file.path,file.name,{locale:'en'})).url;
+      if(preview)preview.location.href=url;else setPreviewError('Your browser blocked the preview. Allow pop-ups for this site and try again.');
+    }catch(e){preview?.close();setPreviewError(e instanceof Error?e.message:'Could not open the contract. Try again.');}finally{setPreviewing(false);}
+  };
   const chooseFile = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
     if (!selected) return;
     if (!VALID_TYPES.includes(selected.type) || selected.size < 1 || selected.size > MAX_FILE_BYTES) {
-      setFile(null);
-      setErrors(previous => ({ ...previous, file: 'Choose a PDF, JPG or PNG file between 1 byte and 10 MB.' }));
+      setErrors(previous => ({ ...previous, file: `Choose a PDF, JPG or PNG file between 1 byte and 10 MB.${file?' Your previously selected file has been kept.':''}` }));
       event.target.value = '';
       return;
     }
-    setFile(selected);
+    setFile(selected);setPreviewError('');
     clearError('file');
   };
 
   const validate = (current: number): boolean => {
-    const next: Partial<Record<Field, string>> = {};
-    if (current === 0 && !file) next.file = 'Upload your lease contract to continue.';
-    if (current === 1) {
-      if (!address.trim()) next.address = 'Enter the property address shown on your lease.';
-      else if (address.trim().length > 500) next.address = 'Use 500 characters or fewer.';
-      if (!contractStart) next.contractStart = 'Enter the lease start date.';
-      if (!contractEnd || (contractStart && contractEnd < contractStart)) next.contractEnd = 'Enter an end date on or after the start date.';
-      const amount = Number(rent);
-      if (!rent || !Number.isSafeInteger(amount) || amount < 1 || amount > 1000000000) next.rent = 'Enter a whole amount from ₩1 to ₩1,000,000,000.';
-    }
-    if (current === 2) {
-      if (!landlordName.trim()) next.landlordName = "Enter the landlord's name as shown on the account.";
-      else if (landlordName.trim().length > 120) next.landlordName = 'Use 120 characters or fewer.';
-      if (!bank.trim()) next.bank = 'Select the deposit bank.';
-      const digits = account.replace(/[ -]/g, '');
-      if (!/^[0-9]{6,30}$/.test(digits)) next.account = 'Enter 6–30 digits. Spaces and hyphens are allowed.';
-    }
+    const next=validateApplicationStep(current,snapshot.current.payload,Boolean(file));
     setErrors(next);
     if (Object.keys(next).length) {
       setMessage('Please correct the highlighted fields before continuing.');
-      const firstField = Object.keys(next)[0] as Field;
-      const inputId: Record<Field, string> = {
-        file: 'lease-file', address: 'property-address', contractStart: 'lease-start',
-        contractEnd: 'lease-end', rent: 'monthly-rent', landlordName: 'landlord-name',
-        bank: 'landlord-bank', account: 'account-number',
-      };
-      requestAnimationFrame(() => document.getElementById(inputId[firstField])?.focus());
+      focusTarget.current=Object.keys(next)[0] as Field;
       return false;
     }
     setMessage('');
     return true;
   };
 
+  const goToStep=(target:number)=>{
+    if(loading||uncertain||conflict||target<0||target>step)return;
+    setMessage('');setErrors({});setReviewConfirmed(false);setStep(target);
+    window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  };
   const nextStep = () => {
     if (!validate(step)) return;
     setStep(current => Math.min(current + 1, STEPS.length - 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
   };
 
   const submit = async (event:FormEvent) => {
@@ -198,7 +194,7 @@ export default function NewApplication() {
     if(!uncertain){
       if(step!==STEPS.length-1||!file)return;
       if(!reviewConfirmed){setMessage('Confirm the details before submitting.');return;}
-      if(![0,1,2].every(validate)){setMessage('Some details need attention. Go back and review your application.');return;}
+      for(const section of [0,1,2]){const issues=validateApplicationStep(section,snapshot.current.payload,Boolean(file));if(Object.keys(issues).length){focusTarget.current=Object.keys(issues)[0] as Field;setStep(section);setReviewConfirmed(false);setErrors(issues);setMessage('Check the highlighted details before submitting.');return;}}
     }
     submitting.current=true;setLoading(true);setMessage('');
     try{
@@ -224,26 +220,24 @@ export default function NewApplication() {
   const fieldError = (field: Field) => errors[field] && <small className="field-error" id={`${field}-error`}>{errors[field]}</small>;
   const invalid = (field: Field) => Boolean(errors[field]);
 
-  if(!ready) return <main className="dashboard-page"><section className="dashboard-main wrap application-shell"><Link href="/dashboard" className="back-link">My dashboard</Link><div className="dashboard-empty"><h1>Restore your application</h1>{loading?<p role="status">Checking saved details and submission results…</p>:<><p role="alert">{message||'Could not load your saved application.'}</p><button className="secondary" onClick={()=>restore()}>Try again</button></>}</div></section></main>;
-  if (complete) return <main className="dashboard-page">
+  if(!ready) return <main className="dashboard-page work-page rent-application"><AccountHeader/><section className="dashboard-main wrap application-shell"><Link href="/dashboard" className="back-link">My dashboard</Link><div className="dashboard-empty"><h1>Restore your application</h1>{loading?<p role="status">Checking saved details and submission results…</p>:<><p role="alert">{message||'Could not load your saved application.'}</p><button className="secondary" onClick={()=>restore()}>Try again</button></>}</div></section></main>;
+  if (complete) return <main className="dashboard-page work-page rent-application"><AccountHeader/>
     <section className="dashboard-main wrap"><div className="dashboard-empty application-complete">
       <div className="success-icon"><Check size={30}/></div>
       <h1>Application received</h1><p>Your reference number is <strong>{complete}</strong>.</p>
       <p>Your request is awaiting review. No card payment or bank transfer has taken place.</p>
-      <Link href={`/applications/${serverDraft.current?.id}`} className="primary">View application</Link>
-      <Link href="/dashboard" className="secondary">Go to dashboard</Link>
+      <Link href={`/applications/${serverDraft.current?.id}`} className="work-button work-button-primary">View application</Link>
+      <Link href="/dashboard" className="work-button">Go to dashboard</Link>
       <button type="button" className="secondary" disabled={loading} onClick={()=>restore(true)}>{loading?'Starting…':'Start another application'}</button>
     </div></section>
   </main>;
 
-  return <main className="dashboard-page">
-    <header><div className="wrap nav"><Link href="/" className="brand"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link></div></header>
+  return <main className="dashboard-page work-page rent-application"><AccountHeader/>
     <section className="dashboard-main wrap application-shell">
-      <Link href="/dashboard" className="back-link"><ArrowLeft size={15}/> My dashboard</Link>
-      <div className="dashboard-heading"><div><h1>Apply for rent payment</h1><p>Complete the four steps below to send a test application for review.</p></div></div>
-      <div className="dashboard-notice"><ShieldCheck size={20}/><div><strong>Test mode</strong><span>Use a sample contract for testing. Selected files and entered details can be saved before submission. No real payment or transfer will occur. <Link href="/privacy">Read the privacy policy</Link>.</span></div></div>
+      <div className="work-page-heading"><div><h1>Apply for rent payment</h1><p>Save your progress, check the details, then submit for test review.</p></div></div>
+      <TestNotice/>
       <div className="draft-save-bar" aria-label="Draft save status">
-        <div><strong>{conflict?'Another tab changed this draft':saving?'Saving your private draft…':saveError?'Draft not saved':draftSignature(snapshot.current.payload,step,file)!==lastSaved.current?'Unsaved changes':`Saved ${draft?new Date(draft.updated_at).toLocaleTimeString('en-GB'):''}`}</strong><p>Your details and selected contract are saved privately to your account. You can return here to continue.</p></div>
+        <div><strong aria-live="polite">{conflict?'Another tab changed this draft':saving?'Saving your private draft…':saveError?'Draft not saved':draftSignature(snapshot.current.payload,step,file)!==lastSaved.current?'Unsaved changes':`Saved ${draft?new Date(draft.updated_at).toLocaleTimeString('en-GB'):''}`}</strong><p>Private draft · not submitted until you confirm the final step.</p></div>
         {!uncertain&&!conflict&&<button type="button" className="secondary" disabled={loading||saving} onClick={saveAndExit}>Save & exit</button>}
       </div>
       {saveError&&<div className="draft-warning" role="alert"><p>{saveError}</p>{!conflict&&!uncertain&&<button type="button" className="secondary" disabled={saving||loading} onClick={()=>saveDraft().catch(()=>undefined)}>Retry save</button>}</div>}
@@ -252,7 +246,7 @@ export default function NewApplication() {
       <p className="application-mobile-progress">Step {step + 1} of {STEPS.length} <strong>{STEPS[step]}</strong></p>
       <ol className="application-steps" aria-label="Application progress">{STEPS.map((label, index) =>
         <li key={label} className={index === step ? 'current' : index < step ? 'done' : ''} aria-current={index === step ? 'step' : undefined}>
-          <span className="step-number">{index < step ? <Check size={14}/> : index + 1}</span><span className="step-label">{label}</span>
+          {index<step?<button type="button" disabled={loading||uncertain||conflict} onClick={()=>goToStep(index)} aria-label={`Edit ${label}`}><span className="step-number"><Check size={14}/></span><span className="step-label">{label}</span></button>:<><span className="step-number">{index+1}</span><span className="step-label">{label}</span></>}
         </li>)}</ol>
       <form className="application-form detail-card" onSubmit={submit} noValidate>
         <fieldset disabled={loading || uncertain || conflict}>
@@ -260,13 +254,15 @@ export default function NewApplication() {
             <div className="step-heading"><FileText size={22}/><div><h2>Upload your lease contract</h2><p>We use the contract to check the rent amount and tenancy details.</p></div></div>
             <label htmlFor="lease-file">Lease contract <span className="required">Required</span>
               <input id="lease-file" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={chooseFile} aria-invalid={invalid('file')} aria-describedby={errors.file ? 'file-error' : 'file-help'}/>
-              {fieldError('file')}<small id="file-help">{file ? `${file.name} · ${Math.ceil(file.size / 1024)} KB${file instanceof File?'':' · restored from your private draft'}` : 'PDF, JPG or PNG · maximum 10 MB'}</small>
+              {fieldError('file')}<small id="file-help">PDF, JPG or PNG · maximum 10 MB. Use a sample file for testing.</small>
             </label>
+            {file&&<div className="application-file"><FileText size={22} aria-hidden="true"/><div><strong>{file.name}</strong><small>{Math.ceil(file.size/1024)} KB · {file instanceof File?'Selected for this draft':'Restored from your saved draft'}</small></div><button type="button" className="work-button" onClick={previewFile} disabled={previewing}>{previewing?'Opening…':'Preview'}<ExternalLink size={14}/></button></div>}
+            {previewError&&<p className="application-error" role="alert">{previewError}</p>}
           </div>}
           {step === 1 && <div className="step-content">
             <div className="step-heading"><div><h2>Enter your rent details</h2><p>Use the address and dates shown on your lease.</p></div></div>
             <label htmlFor="property-address">Property address <span className="required">Required</span>
-              <input id="property-address" value={address} maxLength={500} onChange={event => { setAddress(event.target.value); clearError('address'); }} placeholder="Street address and unit number" aria-invalid={invalid('address')} aria-describedby={errors.address ? 'address-error' : undefined}/>
+              <input id="property-address" value={address} maxLength={500} onChange={event => { setAddress(event.target.value); clearError('address'); }} autoComplete="street-address" placeholder="Street address and unit number" aria-invalid={invalid('address')} aria-describedby={errors.address ? 'address-error' : undefined}/>
               {fieldError('address')}
             </label>
             <div className="field-pair">
@@ -285,21 +281,21 @@ export default function NewApplication() {
               <input id="landlord-name" value={landlordName} maxLength={120} onChange={event => { setLandlordName(event.target.value); clearError('landlordName'); }} placeholder="Name on the bank account" aria-invalid={invalid('landlordName')} aria-describedby={errors.landlordName ? 'landlordName-error' : undefined}/>{fieldError('landlordName')}</label>
             <label htmlFor="landlord-bank">Bank <span className="required">Required</span>
               <select id="landlord-bank" value={bank} onChange={event => { setBank(event.target.value); clearError('bank'); }} aria-invalid={invalid('bank')} aria-describedby={errors.bank ? 'bank-error' : undefined}>
-                <option value="">Select a bank</option><option value="국민은행">KB Kookmin Bank</option><option value="신한은행">Shinhan Bank</option><option value="우리은행">Woori Bank</option><option value="하나은행">Hana Bank</option><option value="농협은행">NH Nonghyup Bank</option><option value="기업은행">IBK Bank</option><option value="카카오뱅크">KakaoBank</option><option value="토스뱅크">Toss Bank</option>
+                <option value="">Select a bank</option>{BANK_OPTIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
               </select>{fieldError('bank')}</label>
             <label htmlFor="account-number">Account number <span className="required">Required</span>
-              <input id="account-number" value={account} inputMode="numeric" autoComplete="off" onChange={event => { setAccount(event.target.value); clearError('account'); }} placeholder="6–30 digits" aria-invalid={invalid('account')} aria-describedby={errors.account ? 'account-error' : undefined}/>{fieldError('account')}</label>
+              <input id="account-number" value={account} inputMode="numeric" autoComplete="off" onChange={event => { setAccount(event.target.value); clearError('account'); }} maxLength={60} placeholder="6–30 digits" aria-invalid={invalid('account')} aria-describedby={errors.account ? 'account-error account-help' : 'account-help'}/>{fieldError('account')}<small id="account-help">Use a Korean bank account belonging to the landlord. Spaces and hyphens are allowed.</small></label>
           </div>}
           {step === 3 && <div className="step-content">
             <div className="step-heading"><div><h2>Review your application</h2><p>Check your details before sending this test request for review.</p></div></div>
             <dl className="review-list">
-              <div><dt>Contract</dt><dd>{file?.name}</dd></div>
-              <div><dt>Property</dt><dd>{address}</dd></div>
+              <div><dt>Contract</dt><dd>{file?.name}<button type="button" className="review-edit" onClick={()=>goToStep(0)}>Change contract</button></dd></div>
+              <div><dt>Property</dt><dd>{address}<button type="button" className="review-edit" onClick={()=>goToStep(1)}>Edit rent details</button></dd></div>
               <div><dt>Lease dates</dt><dd>{contractStart} – {contractEnd}</dd></div>
               <div><dt>Monthly rent</dt><dd>{money(Number(rent))}</dd></div>
               <div><dt>Service fee</dt><dd>To be confirmed</dd></div>
               <div><dt>Landlord</dt><dd>{landlordName}</dd></div>
-              <div><dt>Deposit account</dt><dd>{bank} · {maskAccount(account)}</dd></div>
+              <div><dt>Deposit account</dt><dd>{bankLabel(bank)} · {maskAccount(account)}<button type="button" className="review-edit" onClick={()=>goToStep(2)}>Edit deposit account</button></dd></div>
             </dl>
             <p className="application-disclosure">By submitting, you send these details and the contract to Divercity Pay for a test review. No payment or transfer is made.</p>
             <label className="review-confirm"><input type="checkbox" checked={reviewConfirmed} onChange={event => { setReviewConfirmed(event.target.checked); setMessage(''); }}/><span>I have checked these details and want to submit this test application.</span></label>
@@ -307,9 +303,9 @@ export default function NewApplication() {
         </fieldset>
         {message && <p className="auth-message application-error" role="alert">{message}{message.includes('Profile') && <> <Link href="/profile">Open Profile</Link></>}</p>}
         <div className="application-actions">
-          {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading||conflict} onClick={() => { setMessage(''); setErrors({}); setReviewConfirmed(false); setStep(current => current - 1); }}>Back</button>}
+          {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading||conflict} onClick={()=>goToStep(step-1)}>Back</button>}
           {step < STEPS.length - 1 && !uncertain
-            ? <button type="button" className="primary" disabled={loading||conflict} onClick={nextStep}>Continue <ArrowRight size={16}/></button>
+            ? <button type="button" className="primary" disabled={loading||conflict} onClick={nextStep}>{step===0?'Continue to rent details':step===1?'Continue to deposit account':'Review application'} <ArrowRight size={16}/></button>
             : <button type="submit" className="primary" disabled={loading || !userId || conflict}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
         </div>
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
