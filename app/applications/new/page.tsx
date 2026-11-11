@@ -305,8 +305,8 @@ export default function NewApplication() {
         <div className="application-actions">
           {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading||conflict} onClick={()=>goToStep(step-1)}>Back</button>}
           {step < STEPS.length - 1 && !uncertain
-            ? <button type="button" className="primary" disabled={loading||conflict} onClick={nextStep}>{step===0?'Continue to rent details':step===1?'Continue to deposit account':'Review application'} <ArrowRight size={16}/></button>
-            : <button type="submit" className="primary" disabled={loading || !userId || conflict}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
+            ? <button key="continue-step" type="button" className="primary" disabled={loading||conflict} onClick={event=>{event.preventDefault();nextStep();}}>{step===0?'Continue to rent details':step===1?'Continue to deposit account':'Review application'} <ArrowRight size={16}/></button>
+            : <button key="submit-application" type="submit" className="primary" disabled={loading || !userId || conflict}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
         </div>
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
       </form>
