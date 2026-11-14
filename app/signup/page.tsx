@@ -1,58 +1,31 @@
 'use client';
-
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { LockKeyhole } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-
-export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const signup = async () => {
-    if (!email || !password || !name || !phone) {
-      setMessage('Please enter your name, contact phone, email and password.');
-      return;
-    }
-    if (password.length < 6) {
-      setMessage('Your password must be at least 6 characters.');
-      return;
-    }
-    if (!/^\+?[0-9][0-9 ()-]{5,23}$/.test(phone.trim()) || phone.replace(/\D/g, '').length < 7 || phone.replace(/\D/g, '').length > 15) {
-      setMessage('Enter a valid contact number, including the country code if applicable.');
-      return;
-    }
-    setLoading(true);
-    setMessage('');
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name.trim(), phone: phone.trim() } },
-    });
-    setLoading(false);
-    if (error) {
-      setMessage(error.message.includes('already registered') ? 'This email is already registered.' : 'Could not create your account. Please try again.');
-      return;
-    }
-    if (data.session) window.location.href = '/';
-    else setMessage('Account created. If email verification is enabled, check your inbox before logging in.');
-  };
-
-  return <main className="auth-page"><div className="auth-box">
-    <Link href="/" className="brand"><span className="logo">D</span><span>Divercity <span>Pay</span></span></Link>
-    <h1>Create account</h1><p>Start your rent payment journey.</p>
-    <p className="auth-legal">Before entering personal information, read our <Link href="/terms">Terms of use</Link> and <Link href="/privacy">Privacy policy</Link>. Account details are stored when you create an account. This is a test service.</p>
-    <label>Full name<input value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" /></label>
-    <label>Contact phone<input type="tel" autoComplete="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+82 10-1234-5678" /><small>International numbers are accepted. This is a contact number, not identity verification.</small></label>
-    <label>Email<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>
-    <label>Password<input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 6 characters" /></label>
-    {message && <p className="auth-message">{message}</p>}
-    <button className="primary full" onClick={signup} disabled={loading}>{loading ? 'Creating account...' : 'Create account'}</button>
-    <div className="auth-help"><span>Already have an account?</span><Link href="/login">Log in</Link></div>
-    <small><LockKeyhole size={13}/> Supabase Auth connected · Financial transactions are in test mode</small>
-  </div></main>;
+import FormField from '../../components/FormField';
+import { validateName, validatePhone } from '../../lib/profile-validation';
+export default function Signup(){
+ const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[name,setName]=useState(''),[phone,setPhone]=useState(''),[message,setMessage]=useState(''),[loading,setLoading]=useState(false);
+ const running=useRef(false);
+ const signup=async(event:FormEvent<HTMLFormElement>)=>{
+  event.preventDefault();if(running.current)return;
+  // Also guard values supplied by autofill, which need not dispatch change events.
+  const form=event.currentTarget;const values=new FormData(form);const submittedName=String(values.get('full_name')||''),submittedPhone=String(values.get('phone')||'');
+  for(const [id,value,validate] of [['signup-name',submittedName,validateName],['signup-phone',submittedPhone,validatePhone]] as const){const input=form.querySelector<HTMLInputElement>(`#${id}`)!;input.setCustomValidity(validate(value));if(!input.reportValidity())return;}
+  running.current=true;setLoading(true);setMessage('');
+  try{const {data,error}=await supabase.auth.signUp({email:String(values.get('email')||'').trim(),password:String(values.get('password')||''),options:{data:{full_name:submittedName.trim(),phone:submittedPhone.trim()}}});
+   if(error){setMessage('Could not create your account. Check your details or try logging in if you already have an account.');return;}
+   if(data.session)window.location.assign('/dashboard');else setMessage('Check your inbox to confirm your account, then log in. If you already have an account, use Log in.');
+  }catch{setMessage('Could not connect. Check your connection and try again.');}finally{running.current=false;setLoading(false);}
+ };
+ return <main className="auth-page"><div className="auth-box"><Link href="/" className="brand" aria-label="Divercity Pay home"><span className="logo">D</span><span>Divercity<span>Pay</span></span></Link><h1 id="signup-title">Create account</h1><p>Start your rent payment journey.</p>
+ <p className="auth-legal">Read our <Link href="/terms">Terms of use</Link> and <Link href="/privacy">Privacy policy</Link> before entering personal information. This is a test service.</p>
+ <form method="post" onSubmit={signup} aria-labelledby="signup-title" aria-busy={loading}>
+  <FormField id="signup-name" name="full_name" label="Full name" autoComplete="name" required maxLength={120} validate={validateName} value={name} onChange={e=>setName(e.target.value)} enterKeyHint="next"/>
+  <FormField id="signup-phone" name="phone" label="Contact phone" type="tel" autoComplete="tel" required maxLength={24} validate={validatePhone} value={phone} onChange={e=>setPhone(e.target.value)} hint="International numbers are accepted. Include your country code when applicable. This is not identity verification." enterKeyHint="next"/>
+  <FormField id="signup-email" name="email" label="Email" type="email" autoComplete="username" spellCheck={false} autoCapitalize="none" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" enterKeyHint="next"/>
+  <FormField id="signup-password" name="password" label="Password" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={e=>setPassword(e.target.value)} hint="At least 6 characters. A unique, longer password is recommended." enterKeyHint="go"/>
+  <div className="account-feedback" role="status" aria-live="polite">{message}</div><button type="submit" className="primary full" disabled={loading}>{loading?'Creating account…':'Create account'}</button>
+ </form><div className="auth-help"><span>Already have an account?</span><Link href="/login">Log in</Link></div><small><LockKeyhole size={13} aria-hidden="true"/> Financial transactions are in test mode</small><noscript>JavaScript is required to create an account securely.</noscript></div></main>;
 }

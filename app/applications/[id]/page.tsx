@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { useEffect,useRef,useState } from 'react';
+import { useParams } from 'next/navigation';
+import { useCallback,useEffect,useRef,useState } from 'react';
 import { ArrowLeft,Download,ExternalLink,FileText,RefreshCw } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { createContractLink } from '../../../lib/contracts';
@@ -11,14 +12,15 @@ type Application={id:string;application_number:string|null;applicant_name?:strin
 type History={id:string;from_status:string|null;to_status:string;reason:string|null;created_at:string};
 const money=(n:number)=>`₩${Number(n||0).toLocaleString('ko-KR')}`;
 const reviewLabels:Record<string,string>={pending_review:'Under review',approved:'Approved',rejected:'Declined',cancelled:'Cancelled'};
-export default function ApplicationDetail({params}:{params:{id:string}}){
+export default function ApplicationDetail(){
+ const params=useParams<{id:string}>();
  const [row,setRow]=useState<Application|null>(null),[history,setHistory]=useState<History[]>([]),[email,setEmail]=useState('');
  const [loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[loadError,setLoadError]=useState(''),[historyError,setHistoryError]=useState(''),[historyLoading,setHistoryLoading]=useState(false);
  const [message,setMessage]=useState(''),[actionError,setActionError]=useState(''),[cancelling,setCancelling]=useState(false),[confirmCancel,setConfirmCancel]=useState(false);
  const [contract,setContract]=useState<{preview?:string;download?:string}>({}),[contractError,setContractError]=useState(''),[opening,setOpening]=useState<'preview'|'download'|null>(null);
  const [updatedAt,setUpdatedAt]=useState<Date|null>(null),[statusVersion,setStatusVersion]=useState(0);
  const request=useRef(0),inFlight=useRef(false),cancelInFlight=useRef(false),contractInFlight=useRef(false);
- const load=async()=>{
+ const load=useCallback(async()=>{
   if(inFlight.current)return;inFlight.current=true;setRefreshing(true);setLoadError('');const serial=++request.current;
   try{
    const {data:session,error:sessionError}=await supabase.auth.getSession();if(sessionError)throw sessionError;
@@ -33,8 +35,8 @@ export default function ApplicationDetail({params}:{params:{id:string}}){
    if(result.error)setHistoryError('We could not load your review history. Refresh to try again.');else setHistory(result.data??[]);
   }catch{if(request.current===serial)setLoadError('We could not refresh this application. Check your connection and try again.');}
   finally{if(request.current===serial){setLoading(false);setRefreshing(false);setHistoryLoading(false);inFlight.current=false;}}
- };
- useEffect(()=>{inFlight.current=false;setRow(null);setHistory([]);setLoading(true);setContract({});setContractError('');setActionError('');setMessage('');void load();return()=>{request.current++;};},[params.id]);
+ },[params.id]);
+ useEffect(()=>{inFlight.current=false;setRow(null);setHistory([]);setLoading(true);setContract({});setContractError('');setActionError('');setMessage('');void load();const requestRef=request;return()=>{requestRef.current++;};},[load]);
  const openContract=async(mode:'preview'|'download')=>{
   if(!row?.contract_file_path||contractInFlight.current)return;contractInFlight.current=true;setOpening(mode);setContractError('');
   const preview=mode==='preview'?window.open('about:blank','_blank'):null;if(preview)preview.opener=null;

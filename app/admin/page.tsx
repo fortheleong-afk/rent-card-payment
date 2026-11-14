@@ -56,14 +56,15 @@ export default function Admin(){
    const {data:p}=await supabase.from('profiles').select('role').eq('id',s.session.user.id).single();if(p?.role!=='admin'){setMessage('관리자 권한이 없는 계정입니다.');return;}setAuthorized(true);await load();
   }catch{setLoadError('관리자 화면을 불러오지 못했습니다. 새로고침해주세요.');}finally{setLoading(false);}
  })();},[]);
+ const selectedOpen=Boolean(selected),rejectOpen=Boolean(rejecting);
  useEffect(()=>{
-  if(!selected&&!rejecting)return;
+  if(!selectedOpen&&!rejectOpen)return;
   const previous=document.activeElement as HTMLElement;const root=dialogRef.current;const oldOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
   root?.focus();const key=(e:KeyboardEvent)=>{
    if(e.key==='Escape'&&!reviewing){setSelected(null);setRejecting(null);}
    if(e.key==='Tab'&&root){const items=Array.from(root.querySelectorAll<HTMLElement>('button:not([disabled]),a[href],textarea:not([disabled]),summary,input:not([disabled])')).filter(el=>el.getClientRects().length>0);const first=items[0],last=items[items.length-1];if(!first){e.preventDefault();return;}if(e.shiftKey&&(document.activeElement===first||document.activeElement===root)){last.focus();e.preventDefault();}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===root)){first.focus();e.preventDefault();}}
   };document.addEventListener('keydown',key);return()=>{document.body.style.overflow=oldOverflow;document.removeEventListener('keydown',key);previous?.focus();};
- },[Boolean(selected),Boolean(rejecting),reviewing]);
+ },[selectedOpen,rejectOpen,reviewing]);
  const loadHistory=async(id:string)=>{
   setHistoryLoading(true);setHistoryError('');
   try{const result=await supabase.from('application_status_history').select('id,from_status,to_status,reason,created_at').eq('application_id',id).order('created_at',{ascending:false});
@@ -81,9 +82,9 @@ export default function Admin(){
    await load();setSelected(null);setRejecting(null);setMessage(status==='approved'?'신청을 승인했습니다. 결제 준비 목록에서 테스트 주문을 생성할 수 있습니다.':'신청을 반려하고 신청자에게 알렸습니다.');
   }catch(e){const text=e&&typeof e==='object'&&'message'in e?String(e.message):'심사 처리에 실패했습니다.';setReviewError(text);setMessage(text);}finally{setReviewing(false);}
  };
- const openContract=async(row:Application)=>{
-  if(opening)return;setOpening(true);setContractError('');const preview=window.open('about:blank','_blank');
-  try{const link=await createContractLink(row.contract_file_path,row.contract_file_name);if(selectionId.current!==row.id){preview?.close();return;}setContract(link);if(preview)preview.location.href=link.url;else setContractError('새 탭이 차단됐습니다. 아래의 파일 열기 또는 다운로드를 이용해주세요.');}
+ const openContract=async(row:Application,download=false)=>{
+  if(opening)return;setOpening(true);setContractError('');const preview=download?null:window.open('about:blank','_blank');if(preview)preview.opener=null;
+  try{const link=await createContractLink(row.contract_file_path,row.contract_file_name,{download});if(selectionId.current!==row.id){preview?.close();return;}if(download){const anchor=document.createElement('a');anchor.href=link.url;anchor.download=link.fileName;anchor.rel='noopener noreferrer';document.body.appendChild(anchor);anchor.click();anchor.remove();return;}setContract(link);if(preview)preview.location.href=link.url;else setContractError('새 탭이 차단됐습니다. 아래의 파일 열기 또는 다운로드를 이용해주세요.');}
   catch(e){preview?.close();if(selectionId.current===row.id)setContractError(e instanceof Error?e.message:'계약서를 열지 못했습니다.');}finally{setOpening(false);}
  };
  const matchesQueue=(a:Application,q:string)=>{
@@ -124,7 +125,7 @@ export default function Admin(){
     {selected.status==='pending_review'?<><TestNotice locale="ko"/><div className="admin-review-summary"><StatusBadge journey={getJourney(selected.status,null,'ko')}/><p>계약서와 아래 정보를 대조한 뒤 심사 결과를 선택하세요.</p></div></>:<PaymentOrder key={selected.id} applicationId={selected.id} approved={selected.status==='approved'} applicationStatus={selected.status} simulator onOrderChange={loadOrders}/>}
     <section className="work-review-evidence"><h3>신청자·임대차 정보</h3><dl className="work-facts"><div><dt>신청자</dt><dd>{selected.applicant_name||'미입력'}<small>{selected.applicant_email||'—'} · {selected.applicant_phone||'연락처 미입력'}</small></dd></div><div><dt>주소</dt><dd>{selected.property_address||'미입력'}</dd></div><div><dt>계약 기간</dt><dd>{selected.contract_start_date||'—'} ~ {selected.contract_end_date||'—'}</dd></div><div><dt>월세</dt><dd>{money(selected.rent_amount)}</dd></div><div><dt>접수 당시 이용료</dt><dd>{selected.service_fee===0?'₩0 · 요율 미정 (테스트)':money(selected.service_fee)}</dd></div><div><dt>총 테스트 금액</dt><dd>{money(selected.total_amount)}</dd></div><div><dt>임대인 · 입금 계좌</dt><dd>{selected.landlord_name||'미입력'}<small>{selected.landlord_bank||'—'} · {selected.landlord_account?`••••${selected.landlord_account.slice(-4)}`:'—'}</small></dd></div></dl>
      <h3 className="admin-evidence-heading">제출 계약서</h3><div className="work-file"><FileText size={24}/><div><strong>{selected.contract_file_name||'제출된 계약서 없음'}</strong><p>{selected.contract_file_size?`${(selected.contract_file_size/1024).toFixed(1)} KB`:'크기 정보 없음'} · 비공개 파일</p></div></div><button className="work-button" onClick={()=>openContract(selected)} disabled={opening||!selected.contract_file_path}>{opening?'계약서 확인 중…':'계약서 열기'}<ExternalLink size={15}/></button>
-     {contractError&&<p className="work-error" role="alert">{contractError}</p>}{contract&&<div className="work-file-links"><a href={contract.url} target="_blank" rel="noreferrer">파일 다시 열기 <ExternalLink size={14}/></a><a href={contract.url} download={contract.fileName}>다운로드 <Download size={14}/></a><small>링크는 5분간 유효합니다.</small></div>}
+     {contractError&&<p className="work-error" role="alert">{contractError}</p>}{contract&&<div className="work-file-links"><a href={contract.url} target="_blank" rel="noreferrer">파일 다시 열기 <ExternalLink size={14}/></a><button type="button" className="work-text-button" disabled={opening} onClick={()=>selected&&openContract(selected,true)}>다운로드 <Download size={14}/></button><small>링크는 5분간 유효합니다.</small></div>}
     </section>
     {selected.rejection_reason&&<div className="work-error"><strong>반려 사유</strong><p>{selected.rejection_reason}</p></div>}
     <details className="work-disclosure"><summary><span>심사 이력</span><small>{historyLoading?'불러오는 중…':historyError?'조회 실패':`${history.length}건`}</small></summary><div className="work-disclosure-body">{historyLoading?<p role="status">심사 이력을 불러오고 있습니다.</p>:historyError?<div role="alert"><p>{historyError}</p><button className="work-button" onClick={()=>loadHistory(selected.id)}>이력 다시 불러오기</button></div>:!history.length?<p>아직 기록된 심사 이력이 없습니다.</p>:<ol className="work-timeline">{history.map(h=><li key={h.id}><time>{new Date(h.created_at).toLocaleString('ko-KR')}</time><strong>{reviewLabels[h.from_status??'']||h.from_status||'신청'} → {reviewLabels[h.to_status]||h.to_status}</strong><p>{h.reason||'추가 사유 없음'}</p></li>)}</ol>}</div></details>

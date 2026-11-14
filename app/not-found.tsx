@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function NotFound(){return <main className="work-page"><section className="wrap work-main"><div className="work-empty"><h1>Page not found</h1><p>This link may be incomplete or the page may have moved.</p><Link className="work-button" href="/">Back to home</Link> <Link className="work-button" href="/dashboard">Open dashboard</Link></div></section></main>;}

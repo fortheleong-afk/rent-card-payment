@@ -1,0 +1,33 @@
+/* Shared account/form behavior: readable controls, visible focus, no initial invalid state. */
+:where(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #1452bd;outline-offset:3px}
+html{scroll-padding-top:6rem}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+:where(input,select,textarea){accent-color:#215bd7;caret-color:#163e8a}
+.account-field{margin-block:20px}
+.account-field>label{display:block;margin:0 0 8px;font-size:14px;font-weight:700;color:#162d4d}
+.field-required{font-weight:400;color:#52647b;font-size:12px}
+.account-field input{display:block;width:100%;min-height:48px;margin:0;padding:12px;border:1px solid #7b8799;border-radius:6px;background:#fff;color:#182537;font:inherit;font-size:max(1rem,1em)}
+.account-field input[aria-invalid="true"]{border-color:#b42318}
+.account-field input[readonly]{background:#f3f5f8;color:#52647b}
+.account-field .field-hint,.account-field .field-error{font-size:13px;line-height:1.6;margin:8px 0 0;color:#52647b;text-align:left}
+.account-field .field-error{color:#a51d15}
+.password-control{position:relative}
+.password-control input{padding-inline-end:76px}
+.password-toggle{position:absolute;inset-inline-end:3px;top:3px;min-width:64px;min-height:42px;padding:8px;background:#fff;border:0;border-radius:4px;color:#163e8a;font:inherit;font-size:14px;cursor:pointer}
+.account-feedback{font-size:14px;line-height:1.7;color:#273f5e;overflow-wrap:anywhere}
+.account-feedback:empty{display:none}
+.auth-page{padding-block:28px;min-height:100svh}
+.auth-box>small{color:#52647b;line-height:1.7;margin-top:20px;text-align:center}
+.auth-box .primary{min-height:48px;font-size:16px}
+.auth-box .primary:disabled{opacity:.65;cursor:wait}
+.auth-box .auth-help{font-size:14px;line-height:1.7;flex-wrap:wrap}
+.account-profile{max-width:640px}
+.account-profile>p{font-size:14px;line-height:1.7;color:#52647b}
+.account-profile>.work-button{margin-top:20px}
+.account-updates{padding:0;margin:0;list-style:none}
+.account-updates li{padding:20px 0;overflow-wrap:anywhere}
+.account-updates li+li{border-top:1px solid #e4eaf2}
+.account-updates h2{font-size:17px;margin:0 0 8px}
+.account-updates p{font-size:15px;line-height:1.7;margin:0 0 12px}
+.account-updates time{font-size:13px;color:#52647b}
+@media(max-width:600px){.auth-box{padding:28px 22px}.auth-box h1{margin-top:24px}.auth-help a{padding:8px}.account-profile{padding:20px}}

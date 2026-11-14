@@ -1,0 +1,26 @@
+// Focused regressions for boundaries used by signup, login and the application flow.
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const ts=require('typescript');
+require.extensions['.ts']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,file);
+const {safeNextPath}=require('../lib/navigation.ts');
+const {validateName,validatePhone}=require('../lib/profile-validation.ts');
+const {validateApplicationStep:check}=require('../lib/application-validation.ts');
+const {priorityApplication}=require('../lib/tenant-dashboard.ts');
+for(const value of [null,'','https://example.com','//example.com','/\\example.com','/\n/example.com','/\t/example.com','/\r/example.com'])assert.equal(safeNextPath(value),'/dashboard',`Reject external redirect ${JSON.stringify(value)}`);
+assert.equal(safeNextPath('/admin?queue=review#status'),'/admin?queue=review#status');
+assert.equal(safeNextPath('/demo/admin'),'/admin');
+for(const phone of ['+82 10-1234-5678','+1 (202) 555-0123','01012345678'])assert.equal(validatePhone(phone),'');
+for(const phone of ['','abc','123456','+1234567890123456','++123456789'])assert.ok(validatePhone(phone));
+assert.ok(validateName('   '));for(const name of ['정주환','Nguyễn Văn An','O’Connor'])assert.equal(validateName(name),'');
+const valid={address:'TEST ONLY',contractStart:'2026-12-01',contractEnd:'2027-11-30',rent:'750000',landlordName:'TEST LANDLORD',bank:'신한은행',account:'000-000-0000'};
+for(const step of [0,1,2])assert.deepEqual(check(step,valid,true),{});
+assert.ok(check(0,valid,false).file);
+for(const rent of ['','0','-1','1.5','1000000001','Infinity','NaN'])assert.ok(check(1,{...valid,rent},true).rent);
+for(const date of ['2026-02-29','2026-02-30','0000-01-01','2026-13-01','not-a-date'])assert.ok(check(1,{...valid,contractStart:date},true).contractStart);
+assert.equal(check(1,{...valid,contractStart:'2028-02-29',contractEnd:'2028-03-01'},true).contractStart,undefined);
+assert.ok(check(1,{...valid,contractEnd:'2026-11-30'},true).contractEnd);
+for(const account of ['abc123456','12345','1'.repeat(31)])assert.ok(check(2,{...valid,account},true).account);
+assert.deepEqual(check(2,{...valid,account:'000 000-0000'},true),{});
+const active={id:'active',status:'pending_review',created_at:'2026-11-01'},closed={id:'closed',status:'cancelled',created_at:'2026-11-12'};
+assert.equal(priorityApplication([closed,active],{}).id,'active');
+console.log('Passed: same-origin redirects, international profiles, calendar dates, required application fields, amount/account boundaries and dashboard priority. No network or financial APIs called.');
