@@ -22,7 +22,7 @@
 .surface :global(.tenant-refresh>span){font-size:.8125rem;white-space:nowrap}
 .surface :global(.work-test-note){margin:0 0 var(--spacing-8);font-size:.8125rem;line-height:1.5;gap:var(--spacing-2)}
 .surface .button{font-family:inherit;box-shadow:none;min-height:var(--size-element-md);font-size:.875rem;line-height:1.4;max-width:100%}
-.surface .button :global(.xds-text){font-family:inherit}
+.surface .button :global(.astryx-text){font-family:inherit}
 .surface :global(.tenant-account-strip){margin:0 0 var(--dp-section-gap);padding:var(--spacing-4) var(--spacing-6);gap:var(--spacing-8);border:0;background:var(--color-background-surface);border-radius:var(--radius-container)}
 .surface :global(.tenant-account-strip>a){min-height:3rem;padding:0;gap:var(--spacing-3);font-size:.875rem}
 .surface :global(.tenant-account-strip>a>strong){font-size:.875rem;line-height:1.5}
@@ -56,7 +56,12 @@
 .surface :global(.tenant-list-filters){display:flex;flex-wrap:wrap;overflow:visible;gap:var(--spacing-2);padding:0 0 var(--spacing-6);margin:0;border-bottom:1px solid var(--color-border)}
 .surface .filterButton{flex:none;min-height:var(--size-element-md);padding-inline:var(--spacing-4);font-size:.875rem;border:1px solid transparent;border-radius:var(--radius-element);color:var(--color-text-secondary)}
 .surface .filterButton[aria-pressed=true]{color:var(--color-text-accent);background:var(--color-accent-muted);border-color:var(--color-border-info)}
-.surface .filterButton :global(.xds-badge){font-size:.75rem;margin:0}
+/* Legacy filters style every span; isolate Astryx's label and end-content wrappers. */
+.surface .filterButton span{margin:0}
+.surface .filterButton>span:not([role=status]){display:inline-flex;align-items:center;justify-content:space-between;gap:var(--spacing-2);width:100%}
+.surface .filterButton>span>span{display:inline-flex;flex:none;width:auto}
+.surface .filterButton :global(.astryx-badge){display:inline-flex;width:auto;font-size:.75rem;margin:0}
+.surface .filterButton span[dir]{display:inline;width:auto;font-size:.75rem}
 .surface :global(.work-application-row){padding:var(--spacing-6) 0;gap:var(--spacing-6)}
 .surface :global(.work-application-row:first-child){padding-top:var(--spacing-6)}
 .surface :global(.work-application-row:last-child){padding-bottom:var(--spacing-6)}
@@ -107,7 +112,8 @@
  .surface :global(.tenant-focus .work-next h2){font-size:1.5rem}
  .surface :global(.work-progress li){font-size:.75rem;line-height:1.6;flex-wrap:wrap;align-content:start}
  .surface :global(.tenant-focus .work-next-action)>.button{width:100%}
- .surface :global(.work-section-heading){align-items:flex-start;gap:var(--spacing-3);margin-bottom:var(--spacing-5)}
+ .surface :global(.work-section-heading){align-items:stretch;flex-direction:column;gap:var(--spacing-4);margin-bottom:var(--spacing-5)}
+ .surface :global(.work-section-heading)>.button{width:100%}
  .surface :global(.tenant-list-filters){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--spacing-2);padding-bottom:var(--spacing-5)}
  .surface .filterButton{width:100%;padding-inline:var(--spacing-3);justify-content:space-between}
  .surface :global(.work-application-row){flex-direction:column;align-items:stretch;gap:var(--spacing-4);padding-block:var(--spacing-5)}
