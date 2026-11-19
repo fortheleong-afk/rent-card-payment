@@ -7,20 +7,27 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint app components lib --ext .ts,.tsx",
-    "test:core": "node scripts/check-core.cjs"
+    "test:core": "node scripts/check-core.cjs",
+    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs",
+    "theme:build": "npm run astryx -- theme build components/ui/divercity-theme.ts --out components/ui/divercity-theme.built.css",
+    "theme:check": "npm run theme:build -- --check"
   },
   "dependencies": {
+    "@astryxdesign/core": "0.7.16",
+    "@astryxdesign/theme-neutral": "0.7.16",
+    "@stylexjs/stylex": "0.19.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.49.1",
     "lucide-react": "^0.468.0",
     "next": "15.5.29",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "19.2.9",
+    "react-dom": "19.2.9"
   },
   "devDependencies": {
+    "@astryxdesign/cli": "0.7.16",
     "@types/node": "^20.17.10",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.5.29",
     "typescript": "^5.7.2"
