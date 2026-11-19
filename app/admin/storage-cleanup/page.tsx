@@ -83,7 +83,7 @@ export default function StorageCleanup() {
     setBusy(false);
   }
 
-  return <main className={styles.page}>
+  return <main className={styles.page} lang="ko">
     <div className={styles.shell}>
       <nav className={styles.nav}><Link href="/admin">← 거래 심사로 돌아가기</Link><span>Divercity Pay · 관리자</span></nav>
       <h1>계약서 보관 점검</h1>

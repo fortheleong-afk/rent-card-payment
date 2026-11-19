@@ -1,0 +1,140 @@
+.admin:global(.work-admin),.access{
+ --dp-panel-padding:var(--spacing-8);
+ min-height:100dvh;
+ color:var(--color-text-primary);
+ background:var(--color-background-body);
+ font-family:var(--font-family-body);
+ font-size:1rem;
+ line-height:1.6;
+}
+.admin:global(.work-admin)>aside{width:14rem;flex:0 0 14rem;padding:var(--spacing-8) var(--spacing-4);align-self:flex-start;position:sticky;top:0;height:100dvh;overflow-y:auto}
+.admin:global(.work-admin)>aside .brand{margin:0 var(--spacing-2) var(--spacing-12)}
+.admin:global(.work-admin) :global(.side){min-height:3rem;padding:var(--spacing-3);gap:var(--spacing-3);margin:var(--spacing-1) 0;border-radius:var(--radius-element);font-size:.875rem;line-height:1.6}
+.admin:global(.work-admin) :global(.admin-logout){min-height:3rem;margin:var(--spacing-8) var(--spacing-2) 0;font:inherit;font-size:.875rem;gap:var(--spacing-2)}
+.admin:global(.work-admin) :global(.admin-main){max-width:calc(68rem + 4rem);width:100%;padding:var(--spacing-12) var(--spacing-8);margin-inline:auto;min-width:0}
+.admin:global(.work-admin) :global(.work-page-heading){gap:var(--spacing-6);align-items:flex-start;margin:0 0 var(--spacing-6)}
+.admin:global(.work-admin) :global(.work-page-heading h1){font-size:clamp(1.75rem,1.25rem + 1.2vw,2.25rem);line-height:1.2;letter-spacing:-.035em;margin:0 0 var(--spacing-3);font-weight:800}
+.admin:global(.work-admin) :global(.work-page-heading p){font-size:.9375rem;line-height:1.7;max-width:65ch;color:var(--color-text-secondary);margin:0}
+.admin:global(.work-admin) :global(.admin-refresh){gap:var(--spacing-3);flex-wrap:wrap;justify-content:flex-end}
+.admin:global(.work-admin) :global(.admin-refresh>span){font-size:.8125rem;line-height:1.6;color:var(--color-text-secondary)}
+.admin:global(.work-admin) :global(.work-test-note){font-size:.8125rem;line-height:1.6;gap:var(--spacing-2);margin:0 0 var(--spacing-8)}
+.admin:global(.work-admin) :global(.work-button),.admin:global(.work-admin) :global(.work-icon-button){min-height:3rem;border-radius:var(--radius-element);font-family:inherit;font-size:.875rem;line-height:1.5;padding:var(--spacing-3) var(--spacing-4);box-shadow:none}
+.admin:global(.work-admin) :global(.work-button){border-color:var(--color-border);color:var(--color-text-primary);background:var(--color-background-surface);gap:var(--spacing-2)}
+.admin:global(.work-admin) :global(.work-button-primary){background:var(--color-accent);border-color:var(--color-accent);color:var(--color-on-accent)}
+.admin:global(.work-admin) :global(.work-button-danger){color:var(--color-text-error);border-color:currentColor}
+.admin:global(.work-admin) :global(.work-button:disabled){opacity:.55;cursor:wait}
+.admin:global(.work-admin) :global(.work-icon-button){min-width:3rem;padding:var(--spacing-3)}
+.admin:global(.work-admin) :global(.work-queue){flex-wrap:wrap;overflow:visible;gap:var(--spacing-1);margin:0;border-color:var(--color-border)}
+.admin:global(.work-admin) :global(.work-queue button){min-height:3rem;padding:var(--spacing-3) var(--spacing-4);gap:var(--spacing-2);font-size:.875rem;line-height:1.5}
+.admin:global(.work-admin) :global(.work-queue button[aria-pressed=true]){color:var(--color-text-accent);border-bottom-color:var(--color-accent)}
+.admin:global(.work-admin) :global(.work-queue button>span){font-size:.8125rem;min-width:1.5rem;padding:var(--spacing-1) var(--spacing-2);line-height:1.3}
+.admin:global(.work-admin) :global(.work-queue-sheet){padding:var(--dp-panel-padding);margin-top:var(--spacing-6);border-radius:var(--radius-container)}
+.admin:global(.work-admin) :global(.work-section-heading){margin-bottom:var(--spacing-6);gap:var(--spacing-4)}
+.admin:global(.work-admin) :global(.work-section-heading h2){font-size:1.25rem;line-height:1.4;letter-spacing:-.02em;margin:0}
+.admin:global(.work-admin) :global(.work-count){font-size:.875rem;margin-left:var(--spacing-2)}
+.admin:global(.work-admin) :global(.admin-queue-hint){font-size:.875rem;line-height:1.7;margin:var(--spacing-2) 0 0;max-width:65ch}
+.admin:global(.work-admin) :global(.admin-list-toolbar){gap:var(--spacing-6);margin-bottom:var(--spacing-3);align-items:center}
+.admin:global(.work-admin) :global(.admin-list-toolbar .work-search){max-width:28rem;min-width:0}
+.admin:global(.work-admin) :global(.admin-sort){gap:var(--spacing-3)}
+.admin:global(.work-admin) :global(.admin-sort label),.admin:global(.work-admin) :global(.admin-mobile-filter label){font-size:.875rem;color:var(--color-text-secondary)}
+.admin:global(.work-admin) :global(.work-search input),.admin:global(.work-admin) :global(.admin-sort select),.admin:global(.work-admin) :global(.admin-mobile-filter select){min-height:3rem;font:inherit;font-size:1rem;line-height:1.5;padding:var(--spacing-3);border:1px solid var(--color-border-emphasized);border-radius:var(--radius-element);background:var(--color-background-surface);color:var(--color-text-primary)}
+.admin:global(.work-admin) :global(.work-search input::placeholder){color:var(--color-text-secondary)}
+.admin:global(.work-admin) :global(.admin-list-context){font-size:.8125rem;line-height:1.7;gap:var(--spacing-2) var(--spacing-4);padding:0 0 var(--spacing-5);min-height:0}
+.admin:global(.work-admin) :global(.work-text-button),.admin:global(.work-admin) :global(.work-row-reference){font-size:.8125rem;line-height:1.6;min-height:2.75rem;color:var(--color-text-accent);padding:var(--spacing-2) 0}
+.admin:global(.work-admin) :global(.work-table){font-size:.875rem;line-height:1.6}
+.admin:global(.work-admin) :global(.work-table th){font-size:.8125rem;line-height:1.6;padding:var(--spacing-4) var(--spacing-3)}
+.admin:global(.work-admin) :global(.work-table td){padding:var(--spacing-5) var(--spacing-3);vertical-align:middle}
+.admin:global(.work-admin) :global(.work-table td>strong){font-size:.9375rem;line-height:1.6}
+.admin:global(.work-admin) :global(.work-table td>small){font-size:.8125rem;line-height:1.6;margin-top:var(--spacing-2)}
+.admin:global(.work-admin) :global(.work-table .work-task-copy){font-size:.875rem;line-height:1.7;max-width:16rem}
+.admin:global(.work-admin) :global(.work-table tbody tr:hover){background:var(--color-accent-muted)}
+.admin:global(.work-admin) :global(.work-empty){padding:var(--spacing-12) var(--spacing-6);font-size:.9375rem}
+.admin:global(.work-admin) :global(.work-empty h3){font-size:1.25rem;line-height:1.4}
+.admin:global(.work-admin) :global(.work-feedback),.admin:global(.work-admin) :global(.work-error){font-size:.9375rem;line-height:1.7;overflow-wrap:anywhere}
+.admin:global(.work-admin) :global(.work-drawer){width:min(48rem,100%);max-height:100dvh;color:var(--color-text-primary);background:var(--color-background-surface)}
+.admin:global(.work-admin) :global(.work-drawer-header){padding:var(--spacing-6) var(--dp-panel-padding);gap:var(--spacing-4)}
+.admin:global(.work-admin) :global(.work-drawer-header h2){font-size:1.5rem;line-height:1.4;letter-spacing:-.02em;margin:0}
+.admin:global(.work-admin) :global(.work-drawer-header p){font-size:.875rem;line-height:1.6;margin:var(--spacing-2) 0 0}
+.admin:global(.work-admin) :global(.work-drawer-header small){font-size:.8125rem;margin-top:var(--spacing-2);line-height:1.6}
+.admin:global(.work-admin) :global(.work-drawer-content){padding:var(--dp-panel-padding);scrollbar-gutter:stable}
+.admin:global(.work-admin) :global(.admin-review-summary){gap:var(--spacing-3);margin-bottom:var(--spacing-8)}
+.admin:global(.work-admin) :global(.admin-review-summary p){font-size:.875rem;line-height:1.7;margin:0}
+.admin:global(.work-admin) :global(.work-review-evidence){margin-top:var(--spacing-8)}
+.admin:global(.work-admin) :global(.work-review-evidence h3){font-size:1.125rem;line-height:1.5;margin-bottom:var(--spacing-4)}
+.admin:global(.work-admin) :global(.work-review-evidence .work-facts){gap:0 var(--spacing-6);margin-top:0}
+.admin:global(.work-admin) :global(.work-review-evidence .work-facts>div){padding:var(--spacing-5) 0}
+.admin:global(.work-admin) :global(.work-facts dt){font-size:.875rem;line-height:1.6;margin-bottom:var(--spacing-2)}
+.admin:global(.work-admin) :global(.work-facts dd){font-size:.9375rem;line-height:1.7;overflow-wrap:anywhere}
+.admin:global(.work-admin) :global(.work-facts dd small){font-size:.8125rem;line-height:1.6;margin-top:var(--spacing-2)}
+.admin:global(.work-admin) :global(.admin-evidence-heading){margin-top:var(--spacing-8)}
+.admin:global(.work-admin) :global(.work-file){gap:var(--spacing-4);margin:var(--spacing-6) 0}
+.admin:global(.work-admin) :global(.work-file strong){font-size:.9375rem;line-height:1.6;overflow-wrap:anywhere}
+.admin:global(.work-admin) :global(.work-file p){font-size:.8125rem;line-height:1.6;margin-top:var(--spacing-2)}
+.admin:global(.work-admin) :global(.work-file-links){gap:var(--spacing-3);margin:var(--spacing-5) 0}
+.admin:global(.work-admin) :global(.work-file-links a){min-height:3rem;font-size:.875rem}
+.admin:global(.work-admin) :global(.work-file-links small){font-size:.8125rem;line-height:1.6}
+.admin:global(.work-admin) :global(.work-disclosure){margin-top:var(--spacing-8);border-radius:var(--radius-container)}
+.admin:global(.work-admin) :global(.work-disclosure>summary){padding:var(--spacing-6);font-size:1rem;line-height:1.6;gap:var(--spacing-4)}
+.admin:global(.work-admin) :global(.work-disclosure>summary small){font-size:.8125rem;line-height:1.6}
+.admin:global(.work-admin) :global(.work-disclosure-body){padding:0 var(--spacing-6) var(--spacing-6)}
+.admin:global(.work-admin) :global(.work-timeline time){font-size:.8125rem}
+.admin:global(.work-admin) :global(.work-timeline strong){font-size:.9375rem;line-height:1.7}
+.admin:global(.work-admin) :global(.work-timeline p){font-size:.875rem;line-height:1.7}
+.admin:global(.work-admin) :global(.work-drawer-footer){padding:var(--spacing-5) var(--dp-panel-padding);gap:var(--spacing-3);padding-bottom:max(var(--spacing-5),env(safe-area-inset-bottom))}
+.admin:global(.work-admin) :global(.work-reject-dialog){padding:var(--dp-panel-padding);border-radius:var(--radius-container);width:min(32rem,calc(100% - 2rem));max-height:calc(100dvh - 2rem)}
+.admin:global(.work-admin) :global(.work-reject-dialog h2){font-size:1.5rem;line-height:1.4;margin-bottom:var(--spacing-3)}
+.admin:global(.work-admin) :global(.work-reject-dialog>p){font-size:.9375rem;line-height:1.7;margin-bottom:var(--spacing-6)}
+.admin:global(.work-admin) :global(.work-reject-dialog label){font-size:.875rem;margin-bottom:var(--spacing-2)}
+.admin:global(.work-admin) :global(.work-reject-dialog textarea){font:inherit;font-size:1rem;padding:var(--spacing-3);border-radius:var(--radius-element);border-color:var(--color-border-emphasized);min-height:9rem}
+.admin:global(.work-admin) :global(.work-dialog-actions){gap:var(--spacing-3);margin-top:var(--spacing-6)}
+.admin:global(.work-admin) :global(.work-next){padding:var(--spacing-6);border-radius:var(--radius-container)}
+.admin:global(.work-admin) :global(.work-next h2){font-size:1.5rem;line-height:1.4}
+.admin:global(.work-admin) :global(.work-next p){font-size:.9375rem;line-height:1.7}
+.admin:global(.work-admin) :global(.work-simulator){margin-top:var(--spacing-8);padding:var(--spacing-6);border-radius:var(--radius-container)}
+.admin:global(.work-admin) :global(.work-sim-buttons){gap:var(--spacing-3)}
+.admin:global(.work-admin) :where(a,button,input,select,textarea,summary):focus-visible,.access :where(a,button):focus-visible{outline:3px solid var(--focus-outline-color);outline-offset:3px}
+.admin:global(.work-admin) :is(input,textarea){caret-color:var(--color-accent)}
+.admin:global(.work-admin) ::selection{background:var(--color-accent-muted);color:var(--color-text-primary)}
+.access :global(.work-loading),.access :global(.work-empty){padding:var(--spacing-12) var(--spacing-6);font-size:1rem}
+.skipLink{position:fixed;top:var(--spacing-3);left:var(--spacing-4);transform:translateY(-200%);z-index:1100;padding:var(--spacing-3) var(--spacing-4);background:var(--color-background-surface);color:var(--color-text-accent);border:1px solid var(--color-border);border-radius:var(--radius-element)}
+.skipLink:focus{transform:none}
+@media(max-width:1100px){
+ .admin:global(.work-admin)>aside{display:none}
+ .admin:global(.work-admin) :global(.admin-main){max-width:calc(68rem + 4rem)}
+ .admin:global(.work-admin) :global(.work-admin-mobile-nav){padding-bottom:var(--spacing-5);margin-bottom:var(--spacing-8);gap:var(--spacing-4)}
+ .admin:global(.work-admin) :global(.work-admin-mobile-nav nav){gap:var(--spacing-6)}
+ .admin:global(.work-admin) :global(.work-admin-mobile-nav nav a),.admin:global(.work-admin) :global(.work-admin-mobile-nav nav button){min-height:3rem;font-size:.875rem}
+}
+@media(max-width:700px){
+ .admin:global(.work-admin){--dp-panel-padding:var(--spacing-5)}
+ .admin:global(.work-admin) :global(.admin-main){padding:var(--spacing-8) var(--spacing-4)}
+ .admin:global(.work-admin) :global(.work-admin-mobile-nav){gap:var(--spacing-3);margin-bottom:var(--spacing-8);padding-bottom:var(--spacing-4)}
+ .admin:global(.work-admin) :global(.work-admin-mobile-nav nav){gap:var(--spacing-2);width:100%;justify-content:space-between}
+ .admin:global(.work-admin) :global(.work-admin-mobile-nav nav a),.admin:global(.work-admin) :global(.work-admin-mobile-nav nav button){font-size:.8125rem;min-height:3rem}
+ .admin:global(.work-admin) :global(.work-page-heading){align-items:flex-start;flex-direction:column;gap:var(--spacing-4);margin-bottom:var(--spacing-5)}
+ .admin:global(.work-admin) :global(.work-page-heading p){display:block}
+ .admin:global(.work-admin) :global(.admin-refresh){width:100%;justify-content:space-between}
+ .admin:global(.work-admin) :global(.admin-refresh>span){display:block}
+ .admin:global(.work-admin) :global(.work-test-note){margin-bottom:var(--spacing-6)}
+ .admin:global(.work-admin) :global(.admin-mobile-filter){margin:0;gap:var(--spacing-3)}
+ .admin:global(.work-admin) :global(.work-queue-sheet){margin-top:var(--spacing-6)}
+ .admin:global(.work-admin) :global(.admin-list-toolbar){gap:var(--spacing-4);align-items:stretch}
+ .admin:global(.work-admin) :global(.admin-list-toolbar .work-search){max-width:none}
+ .admin:global(.work-admin) :global(.admin-sort select){max-width:14rem}
+ .admin:global(.work-admin) :global(.admin-list-context){padding-bottom:var(--spacing-5)}
+ .admin:global(.work-admin) :global(.work-table tr){gap:var(--spacing-3);padding:var(--spacing-6) 0}
+ .admin:global(.work-admin) :global(.work-table td){padding:0}
+ .admin:global(.work-admin) :global(.work-table td:first-child){overflow-wrap:anywhere}
+ .admin:global(.work-admin) :global(.work-table .work-task-copy){max-width:none}
+ .admin:global(.work-admin) :global(.work-table td:last-child .work-button){width:100%}
+ .admin:global(.work-admin) :global(.work-drawer-header){padding:var(--spacing-5)}
+ .admin:global(.work-admin) :global(.work-drawer-content){padding:var(--spacing-5)}
+ .admin:global(.work-admin) :global(.work-drawer-footer){padding-inline:var(--spacing-5);flex-wrap:wrap}
+ .admin:global(.work-admin) :global(.work-review-evidence .work-facts){grid-template-columns:minmax(0,1fr);gap:0}
+ .admin:global(.work-admin) :global(.work-review-evidence .work-facts>div){grid-column:1/-1;padding:var(--spacing-4) 0}
+ .admin:global(.work-admin) :global(.work-disclosure>summary){padding:var(--spacing-5)}
+ .admin:global(.work-admin) :global(.work-disclosure-body){padding:0 var(--spacing-5) var(--spacing-5)}
+ .admin:global(.work-admin) :global(.work-dialog-actions){flex-wrap:wrap}
+ .admin:global(.work-admin) :global(.work-dialog-actions .work-button){flex:1}
+}
+@media(prefers-reduced-motion:reduce){.admin{scroll-behavior:auto}}
