@@ -1,0 +1,67 @@
+.application{--dp-field-width:48rem}
+.application :global(.draft-save-bar){padding:var(--spacing-6);margin:0 0 var(--spacing-8);gap:var(--spacing-6);border-radius:var(--radius-container)}
+.application :global(.draft-save-bar strong){font-size:.875rem}
+.application :global(.draft-save-bar p){font-size:.8125rem;line-height:1.6;margin:var(--spacing-2) 0 0;max-width:65ch}
+.application :global(.draft-save-bar .astryx-button){flex:none;min-height:3rem;font-size:.875rem;min-width:0;padding-inline:var(--spacing-4)}
+.application :global(.draft-warning){padding:var(--spacing-6);margin:0 0 var(--spacing-6);border-radius:var(--radius-container);font-size:.9375rem;line-height:1.7}
+.application :global(.draft-warning p){margin:var(--spacing-2) 0 var(--spacing-4)}
+.application :global(.draft-recovery-actions){gap:var(--spacing-3)}
+.application :global(.application-steps){margin:0 0 var(--spacing-6);gap:var(--spacing-4);list-style:none}
+.application :global(.application-steps li){padding:var(--spacing-3) 0;gap:var(--spacing-3);font-size:.875rem;line-height:1.5;min-height:3rem}
+.application :global(.application-steps li>button){min-height:3rem;gap:var(--spacing-3);font:inherit}
+.application :global(.application-steps .step-number){width:1.75rem;height:1.75rem;flex-basis:1.75rem;font-size:.8125rem}
+.application :global(.application-form.detail-card){padding:var(--dp-panel-padding);border-radius:var(--radius-container)}
+.application :global(.application-form .step-content){gap:var(--spacing-6);max-width:var(--dp-field-width)}
+.application :global(.application-form .step-heading){gap:var(--spacing-3);margin:0 0 var(--spacing-2)}
+.application :global(.application-form .step-heading h2){font-size:1.5rem;line-height:1.4;letter-spacing:-.02em;margin:0 0 var(--spacing-3)}
+.application :global(.application-form .step-heading p){font-size:.9375rem;line-height:1.7;margin:0;max-width:65ch}
+.application :global(.application-form label){font-size:.875rem;line-height:1.6;color:var(--color-text-primary)}
+.application :global(.application-form .required){font-size:.75rem;margin-left:var(--spacing-2);color:var(--color-text-secondary)}
+.application :global(.application-form label input),.application :global(.application-form label select){padding:var(--spacing-3);margin-top:var(--spacing-2);min-height:3rem;font-family:inherit;font-size:1rem;line-height:1.5;border-radius:var(--radius-element);border-color:var(--color-border-emphasized)}
+.application :global(.application-form label input[aria-invalid=true]),.application :global(.application-form label select[aria-invalid=true]){border-color:var(--color-text-error)}
+.application :global(.application-form label small){margin-top:var(--spacing-2);font-size:.8125rem;line-height:1.6;font-weight:400}
+.application :global(.application-form .field-error){color:var(--color-text-error);font-weight:600}
+.application :global(.field-pair){gap:var(--spacing-6)}
+.application :global(.application-file){max-width:var(--dp-field-width);gap:var(--spacing-4);padding:var(--spacing-5);border-radius:var(--radius-element)}
+.application :global(.application-file strong){font-size:.9375rem;line-height:1.6}
+.application :global(.application-file small){font-size:.8125rem;margin-top:var(--spacing-2)}
+.application :global(.application-file .astryx-button){flex:none}
+.application :global(.application-form .form-summary){gap:var(--spacing-4);padding:var(--spacing-5);font-size:.9375rem;line-height:1.6;border-radius:var(--radius-element)}
+.application :global(.review-list div){padding:var(--spacing-5) 0;gap:var(--spacing-5);grid-template-columns:10rem minmax(0,1fr)}
+.application :global(.review-list dt){font-size:.875rem;line-height:1.6}
+.application :global(.review-list dd){font-size:.9375rem;line-height:1.7;min-width:0}
+.application :global(.application-form .review-edit){min-height:3rem;padding:var(--spacing-2) 0;font-size:.875rem}
+.application :global(.application-disclosure){padding:var(--spacing-5);border-radius:var(--radius-element);font-size:.875rem;line-height:1.7}
+.application :global(.application-form .review-confirm){gap:var(--spacing-3);min-height:3rem;align-items:flex-start;padding:var(--spacing-3) 0;font-size:.9375rem;line-height:1.7}
+.application :global(.application-form .review-confirm input[type=checkbox]){min-height:1.25rem;width:1.25rem;height:1.25rem;flex-basis:1.25rem;margin:var(--spacing-1) 0 0;padding:0}
+.application :global(.application-form .application-actions){max-width:var(--dp-field-width);padding-top:var(--spacing-6);margin-top:var(--spacing-8);gap:var(--spacing-3)}
+.application :global(.application-actions .primary),.application :global(.application-actions .secondary){min-height:3rem;margin:0;padding:var(--spacing-3) var(--spacing-5);border-radius:var(--radius-element);font:inherit;font-size:.875rem;line-height:1.5;box-shadow:none;cursor:pointer}
+.application :global(.application-actions .primary){background:var(--color-accent);color:var(--color-on-accent)}
+.application :global(.application-actions .secondary){border:1px solid var(--color-border);color:var(--color-text-primary)}
+.application :global(.application-actions button:disabled){opacity:.55;cursor:wait}
+.application :global(.application-error){max-width:var(--dp-field-width);font-size:.875rem;line-height:1.7;color:var(--color-text-error)}
+.application :global(.application-status-link){display:inline-flex;min-height:3rem;align-items:center;font-size:.875rem}
+.application :global(.dashboard-empty){min-height:20rem;padding:var(--dp-panel-padding);gap:var(--spacing-4);max-width:48rem;margin-inline:auto}
+.application :global(.dashboard-empty h1){font-size:clamp(1.75rem,1.25rem + 1.2vw,2.25rem);line-height:1.3;margin:var(--spacing-3) 0}
+.application :global(.dashboard-empty p){margin:0;font-size:.9375rem;line-height:1.7;color:var(--color-text-secondary)}
+.application :global(.application-complete){border:1px solid var(--color-border);border-radius:var(--radius-container);background:var(--color-background-surface)}
+@media(max-width:44rem){
+ .application :global(.draft-save-bar){padding:var(--spacing-5);gap:var(--spacing-4);flex-direction:column;align-items:stretch;margin-bottom:var(--spacing-6)}
+ .application :global(.draft-save-bar .astryx-button){width:100%;min-height:3rem}
+ .application :global(.draft-save-bar p){font-size:.8125rem}
+ .application :global(.draft-warning){padding:var(--spacing-5)}
+ .application :global(.draft-recovery-actions){flex-direction:column}
+ .application :global(.application-mobile-progress){display:block;margin:0 0 var(--spacing-2);font-size:.875rem;line-height:1.6}
+ .application :global(.application-mobile-progress strong){margin-left:var(--spacing-2)}
+ .application :global(.application-steps){margin:0 0 var(--spacing-6);gap:var(--spacing-2)}
+ .application :global(.application-steps li){padding:var(--spacing-2) 0;justify-content:center}
+ .application :global(.application-steps .step-label){position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+ .application :global(.application-form .step-heading h2){font-size:1.25rem}
+ .application :global(.field-pair){grid-template-columns:minmax(0,1fr);gap:var(--spacing-6)}
+ .application :global(.application-file){flex-wrap:wrap;padding:var(--spacing-4)}
+ .application :global(.application-file .astryx-button){width:100%}
+ .application :global(.review-list div){grid-template-columns:minmax(0,1fr);gap:var(--spacing-2);padding:var(--spacing-4) 0}
+ .application :global(.application-actions){flex-direction:column;align-items:stretch}
+ .application :global(.application-actions button){width:100%;min-height:3rem}
+ .application :global(.application-complete .astryx-button){width:100%;min-height:3rem}
+}

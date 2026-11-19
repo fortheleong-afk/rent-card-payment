@@ -7,7 +7,9 @@ import { supabase } from '../../../lib/supabase';
 import { ApplicationDraft,StoredContract,emptyDraftPayload,draftSignature,draftError } from '../../../lib/application-drafts';
 import './application.css';
 
-import AccountHeader from '../../../components/AccountHeader';
+import AccountScreen from '../../../components/ui/AccountScreen';
+import {Button} from '@astryxdesign/core/Button';
+import styles from './application.module.css';
 import { TestNotice } from '../../../components/WorkflowStatus';
 import { createContractLink } from '../../../lib/contracts';
 import { APPLICATION_STEPS as STEPS,BANK_OPTIONS,FIELD_IDS,bankLabel,validateApplicationStep,type ApplicationField } from '../../../lib/application-validation';
@@ -223,47 +225,47 @@ export default function NewApplication() {
   const fieldError = (field: Field) => errors[field] && <small className="field-error" id={`${field}-error`}>{errors[field]}</small>;
   const invalid = (field: Field) => Boolean(errors[field]);
 
-  if(!ready) return <main className="dashboard-page work-page rent-application"><AccountHeader/><section className="dashboard-main wrap application-shell"><Link href="/dashboard" className="back-link">My dashboard</Link><div className="dashboard-empty"><h1>Restore your application</h1>{loading?<p role="status">Checking saved details and submission results…</p>:<><p role="alert">{message||'Could not load your saved application.'}</p><button className="secondary" onClick={()=>restore()}>Try again</button></>}</div></section></main>;
-  if (complete) return <main className="dashboard-page work-page rent-application"><AccountHeader/>
-    <section className="dashboard-main wrap"><div className="dashboard-empty application-complete">
+  if(!ready) return <AccountScreen className={`rent-application ${styles.application}`} contentId="application-content"><section className="dashboard-main wrap application-shell" id="application-content" tabIndex={-1}><Link href="/dashboard" className="back-link">My dashboard</Link><div className="dashboard-empty"><h1>Restore your application</h1>{loading?<p role="status">Checking saved details and submission results…</p>:<><p role="alert">{message||'Could not load your saved application.'}</p><Button label="Try again" onClick={()=>restore()}/></>}</div></section></AccountScreen>;
+  if (complete) return <AccountScreen className={`rent-application ${styles.application}`} contentId="application-content">
+    <section className="dashboard-main wrap" id="application-content" tabIndex={-1}><div className="dashboard-empty application-complete">
       <div className="success-icon"><Check size={30}/></div>
       <h1>Application received</h1><p>Your reference number is <strong>{complete}</strong>.</p>
       <p>Your request is awaiting review. No card payment or bank transfer has taken place.</p>
-      <Link href={`/applications/${serverDraft.current?.id}`} className="work-button work-button-primary">View application</Link>
-      <Link href="/dashboard" className="work-button">Go to dashboard</Link>
-      <button type="button" className="secondary" disabled={loading} onClick={()=>restore(true)}>{loading?'Starting…':'Start another application'}</button>
+      <Button href={`/applications/${serverDraft.current?.id}`} label="View application" variant="primary"/>
+      <Button href="/dashboard" label="Go to dashboard"/>
+      <Button label={loading?'Starting…':'Start another application'} isLoading={loading} onClick={()=>restore(true)}/>
     </div></section>
-  </main>;
+  </AccountScreen>;
 
-  return <main className="dashboard-page work-page rent-application"><AccountHeader/>
-    <section className="dashboard-main wrap application-shell">
+  return <AccountScreen className={`rent-application ${styles.application}`} contentId="application-content">
+    <section className="dashboard-main wrap application-shell" id="application-content" tabIndex={-1}>
       <div className="work-page-heading"><div><h1>Apply for rent payment</h1><p>Save your progress, check the details, then submit for test review.</p></div></div>
       <TestNotice/>
       <div className="draft-save-bar" aria-label="Draft save status">
         <div><strong aria-live="polite">{conflict?'Another tab changed this draft':saving?'Saving your private draft…':saveError?'Draft not saved':draftSignature(snapshot.current.payload,step,file)!==lastSaved.current?'Unsaved changes':`Saved ${draft?new Date(draft.updated_at).toLocaleTimeString('en-GB'):''}`}</strong><p>Private draft · not submitted until you confirm the final step.</p></div>
-        {!uncertain&&!conflict&&<button type="button" className="secondary" disabled={loading||saving} onClick={saveAndExit}>Save & exit</button>}
+        {!uncertain&&!conflict&&<Button label="Save & exit" size="lg" isDisabled={loading||saving} onClick={saveAndExit}/>}
       </div>
-      {saveError&&<div className="draft-warning" role="alert"><p>{saveError}</p>{!conflict&&!uncertain&&<button type="button" className="secondary" disabled={saving||loading} onClick={()=>saveDraft().catch(()=>undefined)}>Retry save</button>}</div>}
-      {conflict&&<div className="draft-warning" role="alert"><p>Newer saved changes are protected. Reload the saved draft before editing further.</p><button type="button" className="secondary" disabled={loading} onClick={()=>restore()}>Reload saved draft</button></div>}
-      {uncertain&&<div className="draft-warning" role="status"><strong>Check your submission result</strong><p>This application keeps the same submission ID after refresh. Check the result first. If it is still pending, retry the saved submission without creating a new application.</p><div className="draft-recovery-actions"><button type="button" className="secondary" disabled={loading} onClick={()=>restore()}>Check saved result</button><button type="button" className="secondary" disabled={loading} onClick={resumeEditing}>Return to saved details</button></div></div>}
+      {saveError&&<div className="draft-warning" role="alert"><p>{saveError}</p>{!conflict&&!uncertain&&<Button label="Retry save" isDisabled={saving||loading} onClick={()=>saveDraft().catch(()=>undefined)}/>}</div>}
+      {conflict&&<div className="draft-warning" role="alert"><p>Newer saved changes are protected. Reload the saved draft before editing further.</p><Button label="Reload saved draft" isDisabled={loading} onClick={()=>restore()}/></div>}
+      {uncertain&&<div className="draft-warning" role="status"><strong>Check your submission result</strong><p>This application keeps the same submission ID after refresh. Check the result first. If it is still pending, retry the saved submission without creating a new application.</p><div className="draft-recovery-actions"><Button label="Check saved result" isDisabled={loading} onClick={()=>restore()}/><Button label="Return to saved details" isDisabled={loading} onClick={resumeEditing}/></div></div>}
       <p className="application-mobile-progress">Step {step + 1} of {STEPS.length} <strong>{STEPS[step]}</strong></p>
       <ol className="application-steps" aria-label="Application progress">{STEPS.map((label, index) =>
         <li key={label} className={index === step ? 'current' : index < step ? 'done' : ''} aria-current={index === step ? 'step' : undefined}>
           {index<step?<button type="button" disabled={loading||uncertain||conflict} onClick={()=>goToStep(index)} aria-label={`Edit ${label}`}><span className="step-number"><Check size={14}/></span><span className="step-label">{label}</span></button>:<><span className="step-number">{index+1}</span><span className="step-label">{label}</span></>}
         </li>)}</ol>
-      <form className="application-form detail-card" onSubmit={submit} noValidate>
-        <fieldset disabled={loading || uncertain || conflict}>
+      <form className="application-form detail-card" method="post" aria-labelledby="application-step-title" onSubmit={submit} noValidate>
+        <fieldset disabled={loading || uncertain || conflict}><legend className="work-sr-only">{STEPS[step]}</legend>
           {step === 0 && <div className="step-content">
-            <div className="step-heading"><FileText size={22}/><div><h2 tabIndex={-1}>Upload your lease contract</h2><p>We use the contract to check the rent amount and tenancy details.</p></div></div>
+            <div className="step-heading"><FileText size={22}/><div><h2 id="application-step-title" tabIndex={-1}>Upload your lease contract</h2><p>We use the contract to check the rent amount and tenancy details.</p></div></div>
             <label htmlFor="lease-file">Lease contract <span className="required">Required</span>
               <input name="contract" required id="lease-file" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={chooseFile} aria-invalid={invalid('file')} aria-describedby={errors.file ? 'file-error' : 'file-help'}/>
               {fieldError('file')}<small id="file-help">PDF, JPG or PNG · maximum 10 MB. Use a sample file for testing.</small>
             </label>
-            {file&&<div className="application-file"><FileText size={22} aria-hidden="true"/><div><strong>{file.name}</strong><small>{Math.ceil(file.size/1024)} KB · {file instanceof File?'Selected for this draft':'Restored from your saved draft'}</small></div><button type="button" className="work-button" onClick={previewFile} disabled={previewing}>{previewing?'Opening…':'Preview'}<ExternalLink size={14}/></button></div>}
+            {file&&<div className="application-file"><FileText size={22} aria-hidden="true"/><div><strong>{file.name}</strong><small>{Math.ceil(file.size/1024)} KB · {file instanceof File?'Selected for this draft':'Restored from your saved draft'}</small></div><Button label={previewing?'Opening…':'Preview'} onClick={previewFile} isLoading={previewing} endContent={<ExternalLink size={16} aria-hidden="true"/>}/></div>}
             {previewError&&<p className="application-error" role="alert">{previewError}</p>}
           </div>}
           {step === 1 && <div className="step-content">
-            <div className="step-heading"><div><h2 tabIndex={-1}>Enter your rent details</h2><p>Use the address and dates shown on your lease.</p></div></div>
+            <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Enter your rent details</h2><p>Use the address and dates shown on your lease.</p></div></div>
             <label htmlFor="property-address">Property address <span className="required">Required</span>
               <input name="address" required id="property-address" value={address} maxLength={500} onChange={event => { setAddress(event.target.value); clearError('address'); }} autoComplete="street-address" placeholder="Street address and unit number" aria-invalid={invalid('address')} aria-describedby={errors.address ? 'address-error' : undefined}/>
               {fieldError('address')}
@@ -279,7 +281,7 @@ export default function NewApplication() {
             <div className="form-summary"><span>Service fee</span><b>To be confirmed</b><span>Rent amount for this test</span><b>{money(Number(rent) || 0)}</b></div>
           </div>}
           {step === 2 && <div className="step-content">
-            <div className="step-heading"><div><h2 tabIndex={-1}>Add the landlord’s deposit account</h2><p>These details are for review only. No transfer will be sent.</p></div></div>
+            <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Add the landlord’s deposit account</h2><p>These details are for review only. No transfer will be sent.</p></div></div>
             <label htmlFor="landlord-name">Landlord / account holder name <span className="required">Required</span>
               <input name="landlord_name" autoComplete="off" required id="landlord-name" value={landlordName} maxLength={120} onChange={event => { setLandlordName(event.target.value); clearError('landlordName'); }} placeholder="Name on the bank account" aria-invalid={invalid('landlordName')} aria-describedby={errors.landlordName ? 'landlordName-error' : undefined}/>{fieldError('landlordName')}</label>
             <label htmlFor="landlord-bank">Bank <span className="required">Required</span>
@@ -290,7 +292,7 @@ export default function NewApplication() {
               <input name="account" required id="account-number" value={account} inputMode="numeric" autoComplete="off" onChange={event => { setAccount(event.target.value); clearError('account'); }} maxLength={60} placeholder="6–30 digits" aria-invalid={invalid('account')} aria-describedby={errors.account ? 'account-error account-help' : 'account-help'}/>{fieldError('account')}<small id="account-help">Use a Korean bank account belonging to the landlord. Spaces and hyphens are allowed.</small></label>
           </div>}
           {step === 3 && <div className="step-content">
-            <div className="step-heading"><div><h2 tabIndex={-1}>Review your application</h2><p>Check your details before sending this test request for review.</p></div></div>
+            <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Review your application</h2><p>Check your details before sending this test request for review.</p></div></div>
             <dl className="review-list">
               <div><dt>Contract</dt><dd>{file?.name}<button type="button" className="review-edit" onClick={()=>goToStep(0)}>Change contract</button></dd></div>
               <div><dt>Property</dt><dd>{address}<button type="button" className="review-edit" onClick={()=>goToStep(1)}>Edit rent details</button></dd></div>
@@ -314,5 +316,5 @@ export default function NewApplication() {
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
       </form>
     </section>
-  </main>;
+  </AccountScreen>;
 }

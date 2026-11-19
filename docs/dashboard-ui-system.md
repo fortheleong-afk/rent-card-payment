@@ -1,6 +1,6 @@
 # Divercity Pay — 사용자 대시보드 디자인 기준
 
-적용일: 2026-11-19. 첫 적용 범위는 `/dashboard`이다.
+적용일: 2026-11-19. 적용 범위는 `/dashboard`, `/applications/new`, `/applications/[id]`이다.
 
 ## 적용 방식
 
@@ -8,7 +8,7 @@
 - 공식 React 19 요구사항에 맞춰 react / react-dom **19.2.9**로 함께 업데이트했다.
 - 실제 Astryx `Theme`, `LinkProvider`, `Button`, `Badge`를 사용한다. 링크 버튼은 Next.js Link로 렌더링되며, 페이지 이동과 클릭 행동을 구분한다.
 - 기존 `getJourney`, `priorityApplication`, `tenantTask`, Supabase 조회, 임시 저장·제출 복구 안내를 재사용한다. DB 정책, SQL, 결제/송금 RPC는 변경하지 않는다.
-- `components/ui/DashboardTheme.tsx`가 대시보드에서만 테마를 제공한다. 다른 화면까지 일괄적으로 바꾸는 글로벌 reset은 추가하지 않는다. 기존 앱 reset 위에 Astryx의 컴포넌트 CSS를 사용한다.
+- `components/ui/AccountTheme.tsx`가 사용자 작업 화면에 공통 테마를 제공하고, `DashboardTheme.tsx`는 호환 export로 유지한다. 다른 화면까지 일괄적으로 바꾸는 글로벌 reset은 추가하지 않는다. 기존 앱 reset 위에 Astryx의 컴포넌트 CSS를 사용한다.
 - CLI 초기화 문서는 `docs/astryx-dashboard-reference.md`에만 저장한다. 전역 에이전트 설정과 기존 AGENTS.md를 변경하지 않는다.
 
 ## 공통 규격
@@ -62,3 +62,11 @@
 ## 검증 범위
 
 빌드, 타입 검사, 린트, 핵심 회귀 검사 및 Astryx doctor 결과를 확인한다. 브라우저에서는 기존 로그인 세션의 신청 표시, 필터의 빈 상태와 복귀, 새로고침, 신청 상세 이동, 모바일 줄바꿈을 확인한다. 결제·송금 테스트 모드는 유지하며 새 금융 거래는 실행하지 않는다.
+
+## 신청 작성·상세 화면 확장
+
+- `AccountScreen`으로 헤더·본문 너비, 제목, 상태 안내와 건너뛰기 링크를 통일한다.
+- 신청 작성은 저장 안내 → 단계 → 입력 → 이전/다음 순서이며, 입력은 16px·48px 높이와 기본 브라우저 입력 의미를 유지한다. 필수 항목·오류 연결, 임시 저장, 새로고침 복구와 제출 처리는 기존 로직을 재사용한다.
+- 단계별 필드셋과 제목을 연결한다. 제출·이전·취소 확인 버튼은 기존 native button을 유지해 disabled·submit·focus 동작을 보존한다. 일반 행동과 링크는 Astryx Button을 사용한다.
+- 상세는 상태·다음 행동, 금액과 신청 정보, 계약서, 상태 이력, 취소 순으로 표시한다. 모바일은 동일 DOM 순서의 한 열로 전환한다.
+- 공개 안내나 관리자 화면에 전역 CSS를 추가하지 않는다. 페이지별 CSS Module로 레거시 선택자와의 충돌을 제한한다. 실제 결제·송금과 Supabase 권한·정책은 변경하지 않는다.
