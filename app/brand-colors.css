@@ -1,0 +1,23 @@
+/* Divercity House family palette, sampled from divercityhouse.com on 2026-11-20.
+   Legacy --blue / --navy names are kept so existing components keep working. */
+:root{
+ --brand-accent:#a230ff;
+ --brand-hover:#8621d6;
+ --brand-link:#7620b2;
+ --brand-lilac:#d2bcf7;
+ --brand-tint:#f4eafe;
+ --brand-surface-soft:#faf7fd;
+ --brand-ink:#242028;
+ --brand-secondary:#625a6d;
+ --brand-muted:#756b80;
+ --brand-border:#e5ddea;
+ --navy:var(--brand-ink);
+ --blue:var(--brand-accent);
+ --pale:var(--brand-surface-soft);
+ --ink:var(--brand-ink);
+ --muted:var(--brand-secondary);
+ --line:var(--brand-border);
+ --soft-blue:var(--brand-tint);
+}
+body{accent-color:var(--brand-accent)}
+::selection{background:var(--brand-lilac);color:var(--brand-ink)}

@@ -8,65 +8,65 @@
 .application-mobile-progress { display: none; }
 .application-steps li {
   display: flex; align-items: center; gap: 9px; min-width: 0;
-  padding: 12px 8px; border-bottom: 2px solid #dce5f1;
-  color: #526783; font-size: 12px; font-weight: 600;
+  padding: 12px 8px; border-bottom: 2px solid var(--brand-border);
+  color: var(--brand-secondary); font-size: 12px; font-weight: 600;
 }
-.application-steps li.current { border-color: #2b6ef3; color: #142d51; }
-.application-steps li.done { border-color: #72a1fa; color: #2558ab; }
+.application-steps li.current { border-color: var(--brand-accent); color: var(--brand-ink); }
+.application-steps li.done { border-color: var(--brand-lilac); color: var(--brand-link); }
 .application-steps .step-number {
   display: grid; flex: 0 0 25px; width: 25px; height: 25px; place-items: center;
-  border-radius: 50%; background: #e9eff7; color: #35516e; font: 700 12px Manrope, sans-serif;
+  border-radius: 50%; background: var(--brand-tint); color: var(--brand-ink); font: 700 12px Manrope, sans-serif;
 }
-.application-steps li.current .step-number { background: #2b6ef3; color: #fff; }
-.application-steps li.done .step-number { background: #e6efff; color: #2558ab; }
+.application-steps li.current .step-number { background: var(--brand-accent); color: #fff; }
+.application-steps li.done .step-number { background: var(--brand-tint); color: var(--brand-link); }
 .application-form.detail-card {
   display: block; width: 100%; max-width: none; padding: 30px;
 }
 .application-form fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .application-form .step-content { display: grid; gap: 22px; max-width: 680px; }
-.application-form .step-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 6px; color: #2b6ef3; }
-.application-form .step-heading h2 { margin: 0 0 6px; color: #172e54; font-size: 21px; line-height: 1.3; }
-.application-form .step-heading p { margin: 0; color: #526783; font-size: 13px; line-height: 1.6; }
-.application-form label { display: grid; gap: 8px; min-width: 0; color: #172e54; font-size: 14px; font-weight: 650; }
-.application-form .required { display: inline; color: #526783; font-size: 12px; font-weight: 500; }
+.application-form .step-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 6px; color: var(--brand-accent); }
+.application-form .step-heading h2 { margin: 0 0 6px; color: var(--brand-ink); font-size: 21px; line-height: 1.3; }
+.application-form .step-heading p { margin: 0; color: var(--brand-secondary); font-size: 13px; line-height: 1.6; }
+.application-form label { display: grid; gap: 8px; min-width: 0; color: var(--brand-ink); font-size: 14px; font-weight: 650; }
+.application-form .required { display: inline; color: var(--brand-secondary); font-size: 12px; font-weight: 500; }
 .application-form label input, .application-form label select {
   box-sizing: border-box; width: 100%; min-width: 0; min-height: 48px;
-  padding: 11px 12px; border: 1px solid #c1d0e3; border-radius: 8px;
-  background: #fff; color: #172e54; font: inherit; font-size: 16px;
+  padding: 11px 12px; border: 1px solid var(--brand-muted); border-radius: 8px;
+  background: #fff; color: var(--brand-ink); font: inherit; font-size: 16px;
 }
 .application-form input[type='file'] { padding: 10px; }
-.application-form label small { color: #526783; font-size: 12px; font-weight: 400; overflow-wrap: anywhere; }
+.application-form label small { color: var(--brand-secondary); font-size: 12px; font-weight: 400; overflow-wrap: anywhere; }
 .application-form .field-error { color: #a61b18; font-weight: 600; }
 .application-form [aria-invalid='true'] { border-color: #b42318; }
 .application-form input:focus-visible, .application-form select:focus-visible, .application-form button:focus-visible, .application-form a:focus-visible {
-  outline: 2px solid #326cf0; outline-offset: 2px;
+  outline: 2px solid var(--brand-accent); outline-offset: 2px;
 }
 .application-form .field-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .application-form .form-summary {
   display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px;
-  padding: 17px; border-radius: 8px; background: #f3f7fc; font-size: 14px;
+  padding: 17px; border-radius: 8px; background: var(--brand-surface-soft); font-size: 14px;
 }
 .application-form .review-list { margin: 0; }
-.application-form .review-list div { display: grid; grid-template-columns: 160px minmax(0,1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid #e1e9f3; }
-.application-form .review-list dt { color: #526783; font-size: 13px; }
-.application-form .review-list dd { margin: 0; color: #172e54; font-weight: 650; overflow-wrap: anywhere; }
-.application-disclosure { padding: 15px; margin: 0; background: #eef5ff; border-radius: 8px; color: #2b4d76; font-size: 13px; line-height: 1.6; }
+.application-form .review-list div { display: grid; grid-template-columns: 160px minmax(0,1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--brand-tint); }
+.application-form .review-list dt { color: var(--brand-secondary); font-size: 13px; }
+.application-form .review-list dd { margin: 0; color: var(--brand-ink); font-weight: 650; overflow-wrap: anywhere; }
+.application-disclosure { padding: 15px; margin: 0; background: var(--brand-surface-soft); border-radius: 8px; color: var(--brand-ink); font-size: 13px; line-height: 1.6; }
 .application-form .review-confirm { display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; cursor: pointer; }
-.application-form .review-confirm input[type='checkbox'] { flex: 0 0 19px; width: 19px; min-height: 19px; height: 19px; margin: 1px 0 0; accent-color: #2b6ef3; }
+.application-form .review-confirm input[type='checkbox'] { flex: 0 0 19px; width: 19px; min-height: 19px; height: 19px; margin: 1px 0 0; accent-color: var(--brand-accent); }
 .application-form .application-error { margin: 20px 0 0; color: #a61b18; overflow-wrap: anywhere; }
-.application-error a { color: #124ab4; font-weight: 700; }
+.application-error a { color: var(--brand-link); font-weight: 700; }
 .application-actions { display: flex; justify-content: space-between; gap: 12px; max-width: 680px; margin-top: 32px; }
 .application-actions > .primary { margin-left: auto; }
 .application-actions button { min-height: 48px; margin-top: 0; }
 .application-actions button:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; }
-.application-status-link { display: inline-block; margin-top: 14px; color: #1554bb; font-weight: 700; }
+.application-status-link { display: inline-block; margin-top: 14px; color: var(--brand-link); font-weight: 700; }
 .application-complete { max-width: 680px; margin: 35px auto; }
-.application-complete h1 { margin: 18px 0 8px; color: #172e54; }
+.application-complete h1 { margin: 18px 0 8px; color: var(--brand-ink); }
 .application-complete p { line-height: 1.6; }
 @media(max-width: 600px) {
   .application-form.detail-card { padding: 22px 18px; }
-  .application-mobile-progress { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 24px 0 4px; color: #526783; font-size: 14px; }
-  .application-mobile-progress strong { color: #172e54; text-align: right; }
+  .application-mobile-progress { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 24px 0 4px; color: var(--brand-secondary); font-size: 14px; }
+  .application-mobile-progress strong { color: var(--brand-ink); text-align: right; }
   .application-steps { gap: 6px; margin: 8px 0 18px; }
   .application-steps li { justify-content: center; padding: 10px 0; }
   .application-steps .step-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -75,8 +75,8 @@
   .application-form .review-list div { grid-template-columns: 1fr; gap: 5px; }
   .application-actions button { flex: 1; }
 }
-.draft-save-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px;margin:18px 0;background:#fff;border:1px solid #d6e0ec;border-radius:8px;color:#243e5e}
-.draft-save-bar strong{font-size:13px}.draft-save-bar p{font-size:12px;line-height:1.6;margin:5px 0 0;color:#526783;max-width:60ch}.draft-save-bar button{min-height:44px;flex:none;margin:0;cursor:pointer}
+.draft-save-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px;margin:18px 0;background:#fff;border:1px solid var(--brand-border);border-radius:8px;color:var(--brand-ink)}
+.draft-save-bar strong{font-size:13px}.draft-save-bar p{font-size:12px;line-height:1.6;margin:5px 0 0;color:var(--brand-secondary);max-width:60ch}.draft-save-bar button{min-height:44px;flex:none;margin:0;cursor:pointer}
 .draft-warning{padding:16px 18px;background:#fffbf2;border:1px solid #e3d2ab;border-radius:8px;margin:14px 0;color:#775025;font-size:13px;line-height:1.6;overflow-wrap:anywhere}.draft-warning p{margin:6px 0 12px}.draft-warning button{min-height:44px;cursor:pointer}.draft-recovery-actions{display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:600px){.draft-save-bar{align-items:flex-start;flex-direction:column;gap:12px}.draft-save-bar button{width:100%}.draft-recovery-actions{flex-direction:column}.draft-recovery-actions button{width:100%}}
 /* Match the account dashboard while keeping the existing four-step draft flow. */
@@ -86,7 +86,7 @@
 .rent-application .work-test-note{margin-bottom:16px}
 .rent-application .draft-save-bar{margin:0 0 22px;padding:14px 16px;gap:16px}
 .rent-application .draft-save-bar p{margin-top:4px;font-size:12px}
-.rent-application .draft-save-bar button{border:1px solid #bdcbdc;border-radius:7px;padding:10px 14px;color:#223c5c;background:#fff;font-size:13px;font-weight:650}
+.rent-application .draft-save-bar button{border:1px solid var(--brand-muted);border-radius:7px;padding:10px 14px;color:var(--brand-ink);background:#fff;font-size:13px;font-weight:650}
 .rent-application .application-steps{margin:22px 0 18px}
 .application-steps li>button{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
 .application-steps li>button:hover .step-label{text-decoration:underline;text-underline-offset:4px}
@@ -97,22 +97,22 @@
 .application-form .step-content{max-width:none}
 .application-form .step-heading{margin-bottom:0}
 .application-form .field-pair{gap:18px}
-.application-form .application-actions{max-width:none;padding-top:20px;margin-top:24px;border-top:1px solid #dce4ee}
+.application-form .application-actions{max-width:none;padding-top:20px;margin-top:24px;border-top:1px solid var(--brand-border)}
 .application-form .form-summary b{text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .application-form .form-summary{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-.application-file{display:flex;align-items:flex-start;gap:12px;padding:16px;background:#f5f8fc;border-radius:7px;color:#315880;min-width:0}
+.application-file{display:flex;align-items:flex-start;gap:12px;padding:16px;background:var(--brand-surface-soft);border-radius:7px;color:var(--brand-secondary);min-width:0}
 .application-file>svg{flex:none;margin-top:3px}
 .application-file>div{flex:1;min-width:0}
-.application-file strong{display:block;font-size:14px;color:#263f5e;overflow-wrap:anywhere}
-.application-file small{display:block;font-size:12px;color:#52647b;margin-top:5px;line-height:1.6}
+.application-file strong{display:block;font-size:14px;color:var(--brand-ink);overflow-wrap:anywhere}
+.application-file small{display:block;font-size:12px;color:var(--brand-secondary);margin-top:5px;line-height:1.6}
 .application-file>.work-button{flex:none}
-.application-form .review-edit{display:block;min-height:36px;background:transparent;border:0;padding:7px 0;color:#2859a6;font:inherit;font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
+.application-form .review-edit{display:block;min-height:36px;background:transparent;border:0;padding:7px 0;color:var(--brand-secondary);font:inherit;font-size:13px;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
 .application-form .review-list dd{font-size:14px;line-height:1.6;font-variant-numeric:tabular-nums}
 .application-form .review-confirm{min-height:44px;padding:6px 0}
 .application-form .review-confirm input[type=checkbox]{margin-top:2px}
 .application-complete{gap:12px;min-height:320px;text-align:center}
-.rent-application .application-complete .primary,.rent-application .application-complete .secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;padding:10px 16px;border:1px solid #bdcbdc;border-radius:7px;background:#fff;color:#223c5c;font:inherit;font-size:13px;cursor:pointer}
-.rent-application :is(button,a,select):focus-visible{outline:2px solid #245fe0;outline-offset:3px}
+.rent-application .application-complete .primary,.rent-application .application-complete .secondary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;padding:10px 16px;border:1px solid var(--brand-muted);border-radius:7px;background:#fff;color:var(--brand-ink);font:inherit;font-size:13px;cursor:pointer}
+.rent-application :is(button,a,select):focus-visible{outline:2px solid var(--brand-accent);outline-offset:3px}
 @media(max-width:600px){
  .rent-application .dashboard-main{padding-top:24px}
  .rent-application .work-page-heading h1{font-size:24px}

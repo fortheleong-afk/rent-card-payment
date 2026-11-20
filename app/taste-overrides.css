@@ -1,40 +1,40 @@
 /* Divercity Pay visual refresh: product-first fintech, restrained and operational. */
 :root {
-  --navy: #132b4f;
-  --blue: #2563eb;
-  --pale: #f5f8fc;
-  --ink: #17263d;
-  --muted: #64748b;
-  --line: #dce5f0;
+  --navy: var(--brand-ink);
+  --blue: var(--brand-accent);
+  --pale: var(--brand-surface-soft);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-secondary);
+  --line: var(--brand-border);
   --surface: #ffffff;
-  --soft-blue: #eaf2ff;
+  --soft-blue: var(--brand-surface-soft);
   --green: #16835b;
 }
 
 body {
-  background: #f8fafc;
+  background: var(--brand-surface-soft);
   color: var(--ink);
   letter-spacing: -0.02em;
 }
 
 .test-banner {
   background: var(--navy);
-  color: #dbeafe;
+  color: var(--brand-tint);
   font-size: 11px;
   letter-spacing: 0;
   padding: 9px 16px;
 }
 
 header {
-  background: rgba(248, 250, 252, .92);
-  border-bottom: 1px solid rgba(220, 229, 240, .9);
+  background: rgba(250,247,253,.92);
+  border-bottom: 1px solid rgba(229,221,234,.9);
   box-shadow: none;
 }
 
 .nav { min-height: 72px; }
 .brand { font-weight: 800; letter-spacing: -0.05em; }
 .brand .logo { box-shadow: none; }
-nav a { color: #53657d; font-size: 12px; }
+nav a { color: var(--brand-secondary); font-size: 12px; }
 nav a:hover { color: var(--blue); }
 
 .hero {
@@ -48,9 +48,9 @@ nav a:hover { color: var(--blue); }
 .eyebrow { color: var(--blue); font-size: 10px; font-weight: 800; letter-spacing: .14em; }
 .hero h1 { color: var(--navy); font-size: clamp(42px, 6vw, 72px); line-height: 1.08; letter-spacing: -.075em; }
 .hero h1 em { color: var(--blue); font-style: normal; }
-.hero-copy > p { color: #5e718b; font-size: 16px; line-height: 1.75; }
-.primary { border-radius: 8px; box-shadow: 0 8px 22px rgba(37, 99, 235, .16); }
-.trust { color: #71839a; font-size: 11px; }
+.hero-copy > p { color: var(--brand-secondary); font-size: 16px; line-height: 1.75; }
+.primary { border-radius: 8px; box-shadow: 0 8px 22px rgba(162,48,255,.16); }
+.trust { color: var(--brand-secondary); font-size: 11px; }
 
 /* The hero is a real product fragment, not a decorative credit-card mockup. */
 .hero-card {
@@ -60,18 +60,18 @@ nav a:hover { color: var(--blue); }
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--surface);
-  box-shadow: 0 18px 50px rgba(19, 43, 79, .10);
+  box-shadow: 0 18px 50px rgba(36, 32, 40, .10);
   color: var(--ink);
   padding: 28px;
 }
-.card-top { color: #71839a; font-size: 12px; }
+.card-top { color: var(--brand-secondary); font-size: 12px; }
 .hero-card .status { color: var(--green); font-size: 11px; }
 .hero-card .dot { background: #27ae78; box-shadow: 0 0 0 4px #e3f7ee; }
 .hero-card .amount { color: var(--navy); font-size: 40px; letter-spacing: -.06em; margin: 24px 0 20px; }
 .hero-card .card-line { background: var(--line); }
-.hero-card .card-info { color: #7889a0; font-size: 11px; }
+.hero-card .card-info { color: var(--brand-secondary); font-size: 11px; }
 .hero-card .card-info strong { color: var(--ink); font-size: 13px; }
-.hero-card .card-bottom { border-top: 1px solid var(--line); color: #73839a; font-size: 10px; margin-top: 24px; padding-top: 18px; }
+.hero-card .card-bottom { border-top: 1px solid var(--line); color: var(--brand-secondary); font-size: 10px; margin-top: 24px; padding-top: 18px; }
 .hero-card .mini-logo { background: var(--blue); }
 .hero-card .visa { color: var(--blue); }
 
@@ -86,12 +86,12 @@ nav a:hover { color: var(--blue); }
 .numbers > div { border-right: 1px solid rgba(255,255,255,.16); padding: 4px 38px; }
 .numbers > div:last-child { border-right: 0; }
 .numbers strong { color: #fff; font-size: 28px; }
-.numbers small { color: #b9c9de; font-size: 11px; }
+.numbers small { color: var(--brand-muted); font-size: 11px; }
 
 .section { padding-top: 112px; padding-bottom: 112px; }
 .section-head { margin-bottom: 44px; }
 .section-head h2 { color: var(--navy); font-size: 32px; letter-spacing: -.06em; }
-.section-head > p { color: #74859b; font-size: 12px; line-height: 1.7; }
+.section-head > p { color: var(--brand-secondary); font-size: 12px; line-height: 1.7; }
 
 .how-grid { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
 .how-card {
@@ -109,35 +109,35 @@ nav a:hover { color: var(--blue); }
 }
 .how-card:nth-child(2) { background: var(--soft-blue); }
 .how-card:nth-child(2), .how-card:nth-child(4) { padding-left: 44px; padding-right: 44px; }
-.how-card .num { color: #9aabc0; font-size: 11px; font-weight: 800; }
+.how-card .num { color: var(--brand-secondary); font-size: 11px; font-weight: 800; }
 .how-card svg:not(.chev) { color: var(--blue); }
 .how-card h3 { font-size: 15px; margin: 0 0 5px; }
 .how-card p { color: var(--muted); font-size: 12px; margin: 0; }
-.how-card .chev { color: #99a9bc; }
+.how-card .chev { color: var(--brand-secondary); }
 
-.apply-section { background: #edf4fc; border-top: 1px solid #dfeaf7; border-bottom: 1px solid #dfeaf7; padding: 104px 0; }
-.apply-box { border: 1px solid #d9e5f2; border-radius: 14px; box-shadow: 0 14px 35px rgba(19,43,79,.07); }
-.progress { background: #fbfdff; border-bottom: 1px solid var(--line); }
-.progress > div span { border: 1px solid #cfdae8; color: #8a9bb0; }
+.apply-section { background: var(--brand-surface-soft); border-top: 1px solid var(--brand-tint); border-bottom: 1px solid var(--brand-tint); padding: 104px 0; }
+.apply-box { border: 1px solid var(--brand-border); border-radius: 14px; box-shadow: 0 14px 35px rgba(36,32,40,.07); }
+.progress { background: var(--brand-surface-soft); border-bottom: 1px solid var(--line); }
+.progress > div span { border: 1px solid var(--brand-border); color: var(--brand-secondary); }
 .progress > div.active span { background: var(--blue); border-color: var(--blue); }
 .form-content { background: #fff; }
 .form-content h3 { color: var(--navy); letter-spacing: -.04em; }
-.upload { border: 1px dashed #9cb9e5; background: #f8fbff; border-radius: 10px; }
+.upload { border: 1px dashed var(--brand-lilac); background: var(--brand-surface-soft); border-radius: 10px; }
 .upload:hover { border-color: var(--blue); background: var(--soft-blue); }
-.summary, .confirm { border: 1px solid var(--line); background: #f8fafc; border-radius: 10px; }
+.summary, .confirm { border: 1px solid var(--line); background: var(--brand-surface-soft); border-radius: 10px; }
 .secondary { border-radius: 8px; }
 .auth-message { border-radius: 8px; }
 
 .faq-list { max-width: 820px; border-top: 0; }
-.faq-list details { background: #eef4fb; border: 0; border-radius: 10px; margin-bottom: 8px; padding: 20px 22px; }
-.faq-list details[open] { background: #e4efff; }
+.faq-list details { background: var(--brand-surface-soft); border: 0; border-radius: 10px; margin-bottom: 8px; padding: 20px 22px; }
+.faq-list details[open] { background: var(--brand-tint); }
 .faq-list summary { color: var(--navy); }
-.faq-list p { color: #60738c; margin-bottom: 0; }
+.faq-list p { color: var(--brand-secondary); margin-bottom: 0; }
 
-.safe { border: 1px solid #d8e6f7; border-radius: 14px; background: #f2f7ff; margin-bottom: 96px; padding: 30px 34px; }
+.safe { border: 1px solid var(--brand-border); border-radius: 14px; background: var(--brand-surface-soft); margin-bottom: 96px; padding: 30px 34px; }
 .safe svg { color: var(--blue); }
 .safe h2 { color: var(--navy); font-size: 20px; }
-.safe p { color: #647792; font-size: 12px; }
+.safe p { color: var(--brand-secondary); font-size: 12px; }
 footer { border-top: 1px solid var(--line); background: #fff; }
 .footer-inner { min-height: 88px; }
 
@@ -293,7 +293,7 @@ body { background: #fff; }
 #how.section .how-card,
 #how.section .how-card:nth-child(2),
 #how.section .how-card:nth-child(4) { background: transparent; }
-#how.section .how-card:nth-child(2) { border-top-color: #9bb2d0; }
+#how.section .how-card:nth-child(2) { border-top-color: var(--brand-muted); }
 
 /* Final override for cached/legacy panel rules. */
 body, main, #how.section, #how.section .how-grid,
@@ -401,7 +401,7 @@ body, main, #how.section, #how.section .how-grid,
   display: flex;
   min-height: 248px;
   border: 0;
-  border-top: 3px solid #c7d6e8;
+  border-top: 3px solid var(--brand-border);
   border-radius: 0;
   background: #fff;
   padding: 20px 20px 22px;
@@ -409,10 +409,10 @@ body, main, #how.section, #how.section .how-grid,
 }
 #how.section .how-card:not(:last-child) { border-right: 1px solid var(--line); }
 #how.section .how-card:first-child { border-top-color: var(--blue); }
-#how.section .how-card:nth-child(2) { border-top-color: #6b96d8; background: #f7faff; }
-#how.section .how-card:nth-child(3) { border-top-color: #4e78b6; }
+#how.section .how-card:nth-child(2) { border-top-color: var(--brand-secondary); background: var(--brand-surface-soft); }
+#how.section .how-card:nth-child(3) { border-top-color: var(--brand-secondary); }
 #how.section .how-card:nth-child(4) { border-top-color: var(--navy); }
-#how.section .how-card .num { color: #91a5bd; font-size: 11px; letter-spacing: .08em; }
+#how.section .how-card .num { color: var(--brand-secondary); font-size: 11px; letter-spacing: .08em; }
 #how.section .how-card svg:not(.chev) { width: 28px; height: 28px; margin: 18px 0 8px; color: var(--blue); }
 #how.section .how-card h3 { max-width: 150px; color: var(--navy); font-size: 18px; line-height: 1.18; }
 #how.section .how-card p { max-width: 180px; color: var(--muted); font-size: 12px; line-height: 1.6; }
@@ -487,8 +487,8 @@ header { position: sticky; top: 0; z-index: 20; }
   padding: 22px 20px;
   box-shadow: none;
 }
-#how.section .how-card:nth-child(2) { background: var(--soft-blue); border-color: #cfe0fb; }
-#how.section .how-card .num { order: -1; color: #8ca5c7; font-size: 10px; }
+#how.section .how-card:nth-child(2) { background: var(--soft-blue); border-color: var(--brand-border); }
+#how.section .how-card .num { order: -1; color: var(--brand-secondary); font-size: 10px; }
 #how.section .how-card h3 { color: var(--navy); font-size: 15px; margin: 4px 0 0; }
 #how.section .how-card p { color: var(--muted); line-height: 1.55; }
 #how.section .how-card .chev { margin-top: auto; color: var(--blue); }
@@ -517,9 +517,9 @@ header { position: sticky; top: 0; z-index: 20; }
   overflow: hidden;
 }
 #how.section .section-head { align-items: end; margin-bottom: 42px; }
-#how.section .eyebrow { color: #8bb6ff; }
+#how.section .eyebrow { color: var(--brand-lilac); }
 #how.section .section-head h2 { color: #fff; font-size: clamp(30px, 4vw, 46px); }
-#how.section .section-head > p { color: #b9c9de; }
+#how.section .section-head > p { color: var(--brand-muted); }
 #how.section .how-grid { border-top: 1px solid rgba(255,255,255,.22); }
 #how.section .how-card,
 #how.section .how-card:nth-child(2),
@@ -530,11 +530,11 @@ header { position: sticky; top: 0; z-index: 20; }
   padding: 18px 12px;
 }
 #how.section .how-card:nth-child(2) { background: rgba(255,255,255,.08); }
-#how.section .how-card .num { color: #8ca5c7; }
-#how.section .how-card svg:not(.chev) { color: #82adff; }
+#how.section .how-card .num { color: var(--brand-secondary); }
+#how.section .how-card svg:not(.chev) { color: var(--brand-lilac); }
 #how.section .how-card h3 { color: #fff; font-size: 16px; }
-#how.section .how-card p { color: #b4c5dc; }
-#how.section .how-card .chev { color: #7f9abc; }
+#how.section .how-card p { color: var(--brand-muted); }
+#how.section .how-card .chev { color: var(--brand-secondary); }
 
 @media (max-width: 720px) {
   #how.section { margin: 32px 16px; padding: 48px 24px 54px; border-radius: 16px; }
@@ -613,7 +613,7 @@ header { position: sticky; top: 0; z-index: 20; }
   justify-content: flex-start;
   gap: 0;
   border: 0;
-  border-top: 3px solid #b8c9dd;
+  border-top: 3px solid var(--brand-muted);
   border-radius: 0;
   border-right: 1px solid var(--line);
   background: #fff !important;
@@ -624,15 +624,15 @@ header { position: sticky; top: 0; z-index: 20; }
 }
 #how.section .how-card:last-child { border-right: 0; }
 #how.section .how-card:first-child { border-top-color: var(--blue); }
-#how.section .how-card:nth-child(2) { border-top-color: #6e97d3; }
-#how.section .how-card:nth-child(3) { border-top-color: #5278b2; }
+#how.section .how-card:nth-child(2) { border-top-color: var(--brand-secondary); }
+#how.section .how-card:nth-child(3) { border-top-color: var(--brand-secondary); }
 #how.section .how-card:nth-child(4) { border-top-color: var(--navy); }
-#how.section .how-card:hover { background: #f8fbff !important; transform: translateY(-3px); }
+#how.section .how-card:hover { background: var(--brand-surface-soft) !important; transform: translateY(-3px); }
 #how.section .how-card .num {
   position: static;
   order: 0;
   align-self: flex-end;
-  color: #8ca1bb;
+  color: var(--brand-secondary);
   font-size: 10px;
   letter-spacing: .08em;
 }
@@ -694,3 +694,4 @@ header { position: sticky; top: 0; z-index: 20; }
   #how.section .how-card h3 { font-size: 15px; }
   #how.section .how-card p { font-size: 11px; }
 }
+

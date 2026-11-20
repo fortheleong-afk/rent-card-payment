@@ -3,8 +3,8 @@
  --dp-section-gap: var(--spacing-8);
  --dp-panel-padding: var(--spacing-8);
  min-height:100dvh;
- background:var(--color-background-body,#f5f7fb);
- color:var(--color-text-primary,#182d48);
+ background:var(--color-background-body,var(--brand-surface-soft));
+ color:var(--color-text-primary,var(--brand-ink));
  font-family:var(--font-family-body,Manrope,sans-serif);
  font-size:1rem;
  line-height:1.6;
