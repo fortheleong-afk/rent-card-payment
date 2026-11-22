@@ -11,6 +11,7 @@ import AccountScreen from '../../../components/ui/AccountScreen';
 import {Button} from '@astryxdesign/core/Button';
 import styles from '../detail.module.css';
 import CorrectionForm from './CorrectionForm';
+import NextMonth from './NextMonth';
 type Application={id:string;application_number:string|null;applicant_name?:string|null;applicant_email?:string|null;property_address:string|null;contract_start_date:string|null;contract_end_date:string|null;rent_amount:number;service_fee:number;total_amount:number;landlord_name:string|null;landlord_bank:string|null;landlord_account_last4:string|null;contract_file_path:string|null;contract_file_name:string|null;contract_file_size:number|null;status:string;rejection_reason:string|null;created_at:string;submitted_at?:string|null;rent_month:string|null;rent_due_date:string|null;revision:number;correction_reason:string|null};
 type History={id:string;from_status:string|null;to_status:string;reason:string|null;created_at:string};
 const money=(n:number)=>`₩${Number(n||0).toLocaleString('ko-KR')}`;
@@ -65,6 +66,7 @@ export default function ApplicationDetail(){
    {message&&<p className="work-feedback" role="status">{message}</p>}
    <nav className="tenant-detail-nav" aria-label="Application sections"><a href="#application-status">Status & next step</a><a href="#application-details">Submitted details</a><a href="#lease-contract">Lease contract</a><a href="#review-history">Review history</a></nav>
    <div id="application-status"><PaymentOrder key={`${row.id}:${statusVersion}`} applicationId={row.id} approved={row.status==='approved'} applicationStatus={row.status}/></div>
+   <NextMonth key={row.id} id={row.id} month={row.rent_month}/>
    {row.status==='needs_changes'&&<section className="work-sheet" aria-labelledby="correction-heading">
     <h2 id="correction-heading">Update this application</h2>
     <p>{row.correction_reason}</p>

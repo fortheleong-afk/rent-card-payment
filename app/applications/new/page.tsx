@@ -11,6 +11,7 @@ import AccountScreen from '../../../components/ui/AccountScreen';
 import {Button} from '@astryxdesign/core/Button';
 import styles from './application.module.css';
 import LeaseReference from './LeaseReference';
+import { existingRentApplication } from '../../../lib/next-rent';
 import { TestNotice } from '../../../components/WorkflowStatus';
 import { checkLeaseFile,createContractLink,leaseObjectPath } from '../../../lib/contracts';
 import { TERMS_VERSION } from '../../../lib/terms-version';
@@ -24,6 +25,7 @@ type Attempt = { id: string; path: string; uploaded: boolean; file:File };
 
 export default function NewApplication() {
   const [step, setStep] = useState(0);
+  const [renewal, setRenewal] = useState<string | null>(null);
   const [userId, setUserId] = useState('');
   const [rent, setRent] = useState('750000');
   const [landlordName, setLandlordName] = useState('');
@@ -92,7 +94,7 @@ export default function NewApplication() {
     finally{if(active.current)setLoading(false);}
   },[applyDraft]);
   useEffect(()=>{
-    active.current=true;restore();
+    active.current=true;setRenewal(new URLSearchParams(window.location.search).get('renewal'));restore();
     const {data:listener}=supabase.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT')window.location.href='/login?next=/applications/new';});
     const warn=(event:BeforeUnloadEvent)=>{
       if(serverDraft.current?.state==='editing'&&draftSignature(snapshot.current.payload,snapshot.current.step,snapshot.current.file)!==lastSaved.current){event.preventDefault();event.returnValue='';}
@@ -252,6 +254,15 @@ export default function NewApplication() {
         await saveDraft(true);
       }
       const {data,error}=await supabase.rpc('submit_application_draft',{p_id:serverDraft.current!.id});
+      if(error?.code === '22023' && error.message.includes('already exists')) {
+        const existing = await existingRentApplication(userId, address, rentMonth, true);
+        if (existing) {
+          // Unlock this unsubmitted draft so it stays editable after the conflict.
+          await supabase.rpc('edit_application_draft', {p_id: serverDraft.current!.id});
+          window.location.replace('/applications/' + existing);
+          return;
+        }
+      }
       if(error)throw error;
       if(!data)throw new Error('The submission result is not confirmed. Check the saved result or retry this same submission.');
       // The wrapper calls the existing atomic submit function with the saved ID.
@@ -301,7 +312,7 @@ export default function NewApplication() {
       <form onFocus={event => { if (event.target.matches("input, select")) lastField.current = event.target; }} className="application-form detail-card" method="post" aria-labelledby="application-step-title" onSubmit={submit} noValidate>
         <fieldset disabled={loading || uncertain || conflict}><legend className="work-sr-only">{STEPS[step]}</legend>
           {step === 0 && <div className="step-content">
-            <div className="step-heading"><FileText size={22}/><div><h2 id="application-step-title" tabIndex={-1}>Upload your lease contract</h2><p>We use the contract to check the rent amount and tenancy details.</p></div></div>
+            <div className="step-heading"><FileText size={22}/><div><h2 id="application-step-title" tabIndex={-1}>Upload your lease contract</h2><p>{renewal === 'attach' ? 'Attach a current lease for this month, then check the copied dates and amount.' : 'We use the contract to check the rent amount and tenancy details.'}</p></div></div>
             <label htmlFor="lease-file">Lease contract <span className="required">Required</span>
               <input name="contract" required id="lease-file" type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={chooseFile} aria-invalid={invalid('file')} aria-describedby={errors.file ? 'file-error' : 'file-help'}/>
               {fieldError('file')}<small id="file-help">PDF, JPG or PNG · maximum 10 MB. Use a sample file for testing.</small>
@@ -310,7 +321,7 @@ export default function NewApplication() {
             {previewError&&<p className="application-error" role="alert">{previewError}</p>}
           </div>}
           {step === 1 && <div className="step-content">
-            <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Enter your rent details</h2><p>Use the address and dates shown on your lease.</p></div></div>
+            <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Enter your rent details</h2><p>{renewal ? 'Check the copied address, lease dates and rent amount for this month.' : 'Use the address and dates shown on your lease.'}</p></div></div>
             <label htmlFor="property-address">Property address <span lang="ko" className={styles.leaseTerm}>소재지</span> <span className="required">Required</span>
               <input name="address" required id="property-address" value={address} maxLength={500} onChange={event => { setAddress(event.target.value); clearError('address'); }} autoComplete="street-address" placeholder="Street address and unit number" aria-invalid={invalid('address')} aria-describedby={errors.address ? 'address-error' : undefined}/>
               {fieldError('address')}
@@ -332,7 +343,7 @@ export default function NewApplication() {
             <div className="form-summary"><span>Service fee</span><b>To be confirmed</b><span>Rent amount for this test</span><b>{money(Number(rent) || 0)}</b></div>
           </div>}
           {step === 2 && <div className="step-content">
-            <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Add the landlord’s deposit account</h2><p>These details are for review only. No transfer will be sent.</p></div></div>
+            <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Add the landlord’s deposit account</h2><p>{renewal ? 'Confirm the bank and enter the landlord’s account number from your lease.' : 'These details are for review only. No transfer will be sent.'}</p></div></div>
             <label htmlFor="landlord-name">Landlord / account holder name <span lang="ko" className={styles.leaseTerm}>임대인 · 예금주</span> <span className="required">Required</span>
               <input name="landlord_name" autoComplete="off" required id="landlord-name" value={landlordName} maxLength={120} onChange={event => { setLandlordName(event.target.value); clearError('landlordName'); }} placeholder="Name on the bank account" aria-invalid={invalid('landlordName')} aria-describedby={errors.landlordName ? 'landlordName-error' : undefined}/>{fieldError('landlordName')}</label>
             <label htmlFor="landlord-bank">Bank <span lang="ko" className={styles.leaseTerm}>은행</span> <span className="required">Required</span>

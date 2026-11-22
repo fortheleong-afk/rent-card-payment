@@ -25,4 +25,11 @@ for(const account of ['abc123456','12345','1'.repeat(31)])assert.ok(check(2,{...
 assert.deepEqual(check(2,{...valid,account:'000 000-0000'},true),{});
 const active={id:'active',status:'pending_review',created_at:'2026-11-01'},closed={id:'closed',status:'cancelled',created_at:'2026-11-12'};
 assert.equal(priorityApplication([closed,active],{}).id,'active');
-console.log('Passed: same-origin redirects, international profiles, calendar dates, required application fields, amount/account boundaries and dashboard priority. No network or financial APIs called.');
+const {renewalSchedule,sameProperty}=require('../lib/rent-period.ts');
+assert.deepEqual(renewalSchedule('2027-01-01','2027-01-31'),{month:'2027-02',due:'2027-02-28'});
+assert.equal(renewalSchedule('2028-01-01','2028-01-31').due,'2028-02-29');
+assert.deepEqual(renewalSchedule('2026-12-01','2026-12-05'),{month:'2027-01',due:'2027-01-05'});
+assert.deepEqual(renewalSchedule(null,null,new Date('2026-11-30T16:00:00Z')),{month:'2027-01',due:''});
+assert.ok(sameProperty(' Unit A ','unit a'));
+assert.ok(!sameProperty('Unit A','Unit B') && !sameProperty(null, null));
+console.log('Passed: redirects, profiles, application validation, dashboard priority and next-month rent scheduling.');
