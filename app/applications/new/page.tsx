@@ -10,6 +10,7 @@ import './application.css';
 import AccountScreen from '../../../components/ui/AccountScreen';
 import {Button} from '@astryxdesign/core/Button';
 import styles from './application.module.css';
+import LeaseReference from './LeaseReference';
 import { TestNotice } from '../../../components/WorkflowStatus';
 import { checkLeaseFile,createContractLink,leaseObjectPath } from '../../../lib/contracts';
 import { TERMS_VERSION } from '../../../lib/terms-version';
@@ -43,6 +44,8 @@ export default function NewApplication() {
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [complete, setComplete] = useState('');
   const [previewing,setPreviewing]=useState(false),[previewError,setPreviewError]=useState('');
+  const lastField = useRef<HTMLElement | null>(null);
+  const showLease = Boolean(file && (step === 1 || step === 2));
   const focusTarget=useRef<Field|null>(null);
   const localPreview=useRef<string|null>(null);
   const fileSelection=useRef(0);
@@ -274,13 +277,13 @@ export default function NewApplication() {
   </AccountScreen>;
 
   return <AccountScreen className={`rent-application ${styles.application}`} contentId="application-content">
-    <section className="dashboard-main wrap application-shell" id="application-content" tabIndex={-1}>
+    <section className={`dashboard-main wrap application-shell ${showLease ? styles.withLease : ''}`} id="application-content" tabIndex={-1}>
       <div className="work-page-heading"><div><h1>Apply for rent payment</h1><p>Save your progress, check the details, then submit for test review.</p></div></div>
       <TestNotice/>
       {!intakeOpen&&<p className="draft-warning" role="status">New submissions are paused. You can still review and save your draft.</p>}
       <div className="draft-save-bar" aria-label="Draft save status">
         <div><strong aria-live="polite">{conflict?'Another tab changed this draft':saving?'Saving your private draft…':saveError?'Draft not saved':draftSignature(snapshot.current.payload,step,file)!==lastSaved.current?'Unsaved changes':`Saved ${draft?new Date(draft.updated_at).toLocaleTimeString('en-GB'):''}`}</strong><p>Private draft · not submitted until you confirm the final step.</p></div>
-        {!uncertain&&!conflict&&!confirmDiscard&&<div className="draft-recovery-actions"><Button label="Save & exit" size="lg" isDisabled={loading||saving} onClick={saveAndExit}/><Button label="Discard draft" isDisabled={loading||saving} onClick={()=>setConfirmDiscard(true)}/></div>}
+        {!uncertain&&!conflict&&!confirmDiscard&&<details className={styles.draftOptions}><summary>Draft options</summary><div className="draft-recovery-actions"><Button label="Save & exit" size="lg" isDisabled={loading||saving} onClick={saveAndExit}/><Button label="Discard draft" isDisabled={loading||saving} onClick={()=>setConfirmDiscard(true)}/></div></details>}
       </div>
       {confirmDiscard&&<section className="draft-warning" aria-labelledby="discard-title"><strong id="discard-title">Discard this draft?</strong><p>This removes the saved application details. You can start again from your dashboard.</p><div className="draft-recovery-actions"><Button label="Keep draft" isDisabled={loading} onClick={()=>setConfirmDiscard(false)}/><button type="button" className="work-button work-button-danger" disabled={loading} onClick={discardDraft}>Confirm discard</button></div></section>}
       {saveError&&<div className="draft-warning" role="alert"><p>{saveError}</p>{!conflict&&!uncertain&&<Button label="Retry save" isDisabled={saving||loading} onClick={()=>saveDraft().catch(()=>undefined)}/>}</div>}
@@ -291,7 +294,9 @@ export default function NewApplication() {
         <li key={label} className={index === step ? 'current' : index < step ? 'done' : ''} aria-current={index === step ? 'step' : undefined}>
           {index<step?<button type="button" disabled={loading||uncertain||conflict} onClick={()=>goToStep(index)} aria-label={`Edit ${label}`}><span className="step-number"><Check size={14}/></span><span className="step-label">{label}</span></button>:<><span className="step-number">{index+1}</span><span className="step-label">{label}</span></>}
         </li>)}</ol>
-      <form className="application-form detail-card" method="post" aria-labelledby="application-step-title" onSubmit={submit} noValidate>
+      <div className={showLease ? styles.workspace : undefined}>
+      {showLease && file && <LeaseReference file={file} lastField={lastField}/>}
+      <form onFocus={event => { if (event.target.matches("input, select")) lastField.current = event.target; }} className="application-form detail-card" method="post" aria-labelledby="application-step-title" onSubmit={submit} noValidate>
         <fieldset disabled={loading || uncertain || conflict}><legend className="work-sr-only">{STEPS[step]}</legend>
           {step === 0 && <div className="step-content">
             <div className="step-heading"><FileText size={22}/><div><h2 id="application-step-title" tabIndex={-1}>Upload your lease contract</h2><p>We use the contract to check the rent amount and tenancy details.</p></div></div>
@@ -304,14 +309,14 @@ export default function NewApplication() {
           </div>}
           {step === 1 && <div className="step-content">
             <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Enter your rent details</h2><p>Use the address and dates shown on your lease.</p></div></div>
-            <label htmlFor="property-address">Property address <span className="required">Required</span>
+            <label htmlFor="property-address">Property address <span lang="ko" className={styles.leaseTerm}>소재지</span> <span className="required">Required</span>
               <input name="address" required id="property-address" value={address} maxLength={500} onChange={event => { setAddress(event.target.value); clearError('address'); }} autoComplete="street-address" placeholder="Street address and unit number" aria-invalid={invalid('address')} aria-describedby={errors.address ? 'address-error' : undefined}/>
               {fieldError('address')}
             </label>
             <div className="field-pair">
-              <label htmlFor="lease-start">Lease start date <span className="required">Required</span>
+              <label htmlFor="lease-start">Lease start date <span lang="ko" className={styles.leaseTerm}>임대차 시작일</span> <span className="required">Required</span>
                 <input name="lease_start" required id="lease-start" type="date" value={contractStart} onChange={event => { setContractStart(event.target.value); clearError('contractStart'); }} aria-invalid={invalid('contractStart')} aria-describedby={errors.contractStart ? 'contractStart-error' : undefined}/>{fieldError('contractStart')}</label>
-              <label htmlFor="lease-end">Lease end date <span className="required">Required</span>
+              <label htmlFor="lease-end">Lease end date <span lang="ko" className={styles.leaseTerm}>임대차 종료일</span> <span className="required">Required</span>
                 <input name="lease_end" required id="lease-end" type="date" value={contractEnd} min={contractStart || undefined} onChange={event => { setContractEnd(event.target.value); clearError('contractEnd'); }} aria-invalid={invalid('contractEnd')} aria-describedby={errors.contractEnd ? 'contractEnd-error' : undefined}/>{fieldError('contractEnd')}</label>
             </div>
             <div className="field-pair">
@@ -320,19 +325,19 @@ export default function NewApplication() {
               <label htmlFor="rent-due-date">Rent due date <span className="required">Required</span>
                 <input id="rent-due-date" name="due_date" type="date" value={dueDate} onChange={event=>{setDueDate(event.target.value);clearError('dueDate');}} aria-invalid={invalid('dueDate')} aria-describedby={errors.dueDate?'dueDate-error':undefined} required/>{fieldError('dueDate')}</label>
             </div>
-            <label htmlFor="monthly-rent">Monthly rent (KRW) <span className="required">Required</span>
+            <label htmlFor="monthly-rent">Monthly rent (KRW) <span lang="ko" className={styles.leaseTerm}>차임 · 월세</span> <span className="required">Required</span>
               <input name="rent" required id="monthly-rent" type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={rent} onChange={event => { setRent(event.target.value); clearError('rent'); }} aria-invalid={invalid('rent')} aria-describedby={errors.rent ? 'rent-error' : undefined}/>{fieldError('rent')}</label>
             <div className="form-summary"><span>Service fee</span><b>To be confirmed</b><span>Rent amount for this test</span><b>{money(Number(rent) || 0)}</b></div>
           </div>}
           {step === 2 && <div className="step-content">
             <div className="step-heading"><div><h2 id="application-step-title" tabIndex={-1}>Add the landlord’s deposit account</h2><p>These details are for review only. No transfer will be sent.</p></div></div>
-            <label htmlFor="landlord-name">Landlord / account holder name <span className="required">Required</span>
+            <label htmlFor="landlord-name">Landlord / account holder name <span lang="ko" className={styles.leaseTerm}>임대인 · 예금주</span> <span className="required">Required</span>
               <input name="landlord_name" autoComplete="off" required id="landlord-name" value={landlordName} maxLength={120} onChange={event => { setLandlordName(event.target.value); clearError('landlordName'); }} placeholder="Name on the bank account" aria-invalid={invalid('landlordName')} aria-describedby={errors.landlordName ? 'landlordName-error' : undefined}/>{fieldError('landlordName')}</label>
-            <label htmlFor="landlord-bank">Bank <span className="required">Required</span>
+            <label htmlFor="landlord-bank">Bank <span lang="ko" className={styles.leaseTerm}>은행</span> <span className="required">Required</span>
               <select name="bank" required id="landlord-bank" value={bank} onChange={event => { setBank(event.target.value); clearError('bank'); }} aria-invalid={invalid('bank')} aria-describedby={errors.bank ? 'bank-error' : undefined}>
                 <option value="">Select a bank</option>{BANK_OPTIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
               </select>{fieldError('bank')}</label>
-            <label htmlFor="account-number">Account number <span className="required">Required</span>
+            <label htmlFor="account-number">Account number <span lang="ko" className={styles.leaseTerm}>계좌번호</span> <span className="required">Required</span>
               <input name="account" required id="account-number" value={account} inputMode="numeric" autoComplete="off" onChange={event => { setAccount(event.target.value); clearError('account'); }} maxLength={60} placeholder="6–30 digits" aria-invalid={invalid('account')} aria-describedby={errors.account ? 'account-error account-help' : 'account-help'}/>{fieldError('account')}<small id="account-help">Use a Korean bank account belonging to the landlord. Spaces and hyphens are allowed.</small></label>
           </div>}
           {step === 3 && <div className="step-content">
@@ -361,6 +366,7 @@ export default function NewApplication() {
         </div>
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
       </form>
+      </div>
     </section>
   </AccountScreen>;
 }

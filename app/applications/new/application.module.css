@@ -65,3 +65,46 @@
  .application :global(.application-actions button){width:100%;min-height:3rem}
  .application :global(.application-complete .astryx-button){width:100%;min-height:3rem}
 }
+
+.draftOptions {position:relative}
+.draftOptions summary,.readerTrigger,.sheetHeading button,.documentBar a,.readerStatus button {
+  color:var(--brand-link);font:inherit;font-size:.875rem;font-weight:650;cursor:pointer;
+}
+.draftOptions summary {padding:12px 4px;white-space:nowrap}
+.draftOptions[open] :global(.draft-recovery-actions) {
+  position:absolute;right:0;top:100%;z-index:2;display:grid;min-width:10rem;padding:.5rem;
+  border:1px solid var(--color-border);border-radius:var(--radius-element);background:var(--color-background-surface);
+}
+.leaseTerm {display:inline-block;color:var(--color-text-secondary);font-size:.8125rem;font-weight:400;margin-inline-start:.25rem}
+.workspace {min-width:0}
+.readerTrigger,.sheetHeading button {display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:transparent;border:0;min-height:44px;padding:0 .5rem}
+.readerTrigger {border:1px solid var(--color-border);border-radius:var(--radius-element);padding:0 .875rem;margin:0 0 .75rem}
+.reader,.sheet {color:var(--color-text-primary);background:var(--color-background-surface);border:1px solid var(--color-border);border-radius:var(--radius-container)}
+.reader h2,.sheetHeading h2 {display:flex;align-items:center;gap:.5rem;margin:0;font-size:1.125rem;letter-spacing:-.02em}
+.reader h2 {padding:1rem}
+.sheet {position:fixed;inset:auto 0 0;margin:0 auto;width:min(100%,48rem);max-width:100%;max-height:92dvh;padding:0;border-radius:1rem 1rem 0 0;overflow:auto;overscroll-behavior:contain}
+.sheet::backdrop {background:rgb(25 17 34 / 55%)}
+.sheetHeading,.documentBar {display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.5rem 1rem}
+.sheetHeading {border-bottom:1px solid var(--color-border)}
+.documentBar {font-size:.8125rem;color:var(--color-text-secondary)}
+.documentBar span {overflow-wrap:anywhere;min-width:0}
+.documentBar a {display:inline-flex;align-items:center;gap:.35rem;min-height:44px;white-space:nowrap}
+.readerStatus {padding:1rem}
+.documentBody {background:var(--brand-surface-soft);overflow:auto;height:min(66dvh,46rem);overscroll-behavior:contain}
+.documentBody img {display:block;width:100%;height:auto}
+.documentBody iframe {width:100%;height:100%;border:0;display:block}
+@media(min-width:60rem) {
+ .application :global(.application-shell).withLease {max-width:74rem}
+ .workspace {display:grid;grid-template-columns:minmax(0, 0.95fr) minmax(0, 1.05fr);gap:var(--spacing-6);align-items:start}
+ .reader {position:sticky;top:1rem;overflow:hidden}
+ .workspace :global(.field-pair) {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .workspace input,.workspace select {min-width:0}
+}
+@media(max-width:44rem) {
+ .application :global(.work-page-heading p),.application :global(.draft-save-bar p) {display:none}
+ .application :global(.draft-save-bar) {display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:.5rem;padding:0;border:0;background:transparent;margin-bottom:.5rem}
+ .application :global(.draft-save-bar strong) {font-size:.8125rem;font-weight:500}
+ .application :global(.application-steps) {display:none}
+ .application :global(.application-mobile-progress) {margin:0 0 .75rem}
+ .application :global(.work-test-note) {margin-bottom:.25rem}
+}
