@@ -108,3 +108,13 @@
  .application :global(.application-mobile-progress) {margin:0 0 .75rem}
  .application :global(.work-test-note) {margin-bottom:.25rem}
 }
+@media(max-width:59.99rem) {
+ .mobileReference {position:sticky;top:0;z-index:1;background:var(--color-background-surface);padding-block:.25rem}
+ .readerTrigger {margin:0}
+ .workspace :is(input,select) {scroll-margin-block-start:4rem}
+ .draftOptions[open] {z-index:2}
+}
+@media(max-width:44rem) {
+ .application :global(.application-mobile-progress) {display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+ .application :global(.application-mobile-progress select) {min-height:44px;max-width:65%;font:inherit;font-weight:600;color:var(--brand-ink);background:transparent;border:0}
+}

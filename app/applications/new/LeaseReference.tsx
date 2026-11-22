@@ -51,7 +51,7 @@ function LeaseDocument({file}: {file: Lease}) {
   return <>
     <div className={styles.documentBar}><span>{file.name}</span><a href={source.url} target="_blank" rel="noopener noreferrer">Open full size <ExternalLink size={14} aria-hidden="true"/></a></div>
     <div className={styles.documentBody}>
-      {source.pdf ? <iframe title="Lease PDF" src={source.url}/> :
+      {source.pdf ? <iframe title="Lease PDF" src={source.url + '#navpanes=0&view=FitH'}/> :
         // A private, browser-local image cannot use the Next.js image optimizer.
         // eslint-disable-next-line @next/next/no-img-element
         <img src={source.url} alt="Your uploaded lease" onError={() => setError('This image could not be displayed. Check the uploaded file and try again.')}/>}

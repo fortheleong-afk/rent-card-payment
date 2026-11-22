@@ -289,7 +289,9 @@ export default function NewApplication() {
       {saveError&&<div className="draft-warning" role="alert"><p>{saveError}</p>{!conflict&&!uncertain&&<Button label="Retry save" isDisabled={saving||loading} onClick={()=>saveDraft().catch(()=>undefined)}/>}</div>}
       {conflict&&<div className="draft-warning" role="alert"><p>Newer saved changes are protected. Reload the saved draft before editing further.</p><Button label="Reload saved draft" isDisabled={loading} onClick={()=>restore()}/></div>}
       {uncertain&&<div className="draft-warning" role="status"><strong>Check your submission result</strong><p>This application keeps the same submission ID after refresh. Check the result first. If it is still pending, retry the saved submission without creating a new application.</p><div className="draft-recovery-actions"><Button label="Check saved result" isDisabled={loading} onClick={()=>restore()}/><Button label="Return to saved details" isDisabled={loading} onClick={resumeEditing}/></div></div>}
-      <p className="application-mobile-progress">Step {step + 1} of {STEPS.length} <strong>{STEPS[step]}</strong></p>
+      <p className="application-mobile-progress">Step {step + 1} of {STEPS.length} {step === 0 ? <strong>{STEPS[step]}</strong> : <select aria-label="Current step or return to a previous step" value={step} disabled={loading||uncertain||conflict} onChange={event => goToStep(Number(event.target.value))}>
+        {STEPS.slice(0, step+1).map((label, index) => <option key={label} value={index}>{label}</option>)}
+      </select>}</p>
       <ol className="application-steps" aria-label="Application progress">{STEPS.map((label, index) =>
         <li key={label} className={index === step ? 'current' : index < step ? 'done' : ''} aria-current={index === step ? 'step' : undefined}>
           {index<step?<button type="button" disabled={loading||uncertain||conflict} onClick={()=>goToStep(index)} aria-label={`Edit ${label}`}><span className="step-number"><Check size={14}/></span><span className="step-label">{label}</span></button>:<><span className="step-number">{index+1}</span><span className="step-label">{label}</span></>}
@@ -326,7 +328,7 @@ export default function NewApplication() {
                 <input id="rent-due-date" name="due_date" type="date" value={dueDate} onChange={event=>{setDueDate(event.target.value);clearError('dueDate');}} aria-invalid={invalid('dueDate')} aria-describedby={errors.dueDate?'dueDate-error':undefined} required/>{fieldError('dueDate')}</label>
             </div>
             <label htmlFor="monthly-rent">Monthly rent (KRW) <span lang="ko" className={styles.leaseTerm}>차임 · 월세</span> <span className="required">Required</span>
-              <input name="rent" required id="monthly-rent" type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={rent} onChange={event => { setRent(event.target.value); clearError('rent'); }} aria-invalid={invalid('rent')} aria-describedby={errors.rent ? 'rent-error' : undefined}/>{fieldError('rent')}</label>
+              <input name="rent" required id="monthly-rent" type="text" inputMode="numeric" pattern="[0-9]+" value={rent} onChange={event => { const value=event.target.value; if (/^\d*$/.test(value)) { setRent(value); clearError('rent'); } }} aria-invalid={invalid('rent')} aria-describedby={errors.rent ? 'rent-error' : undefined}/>{fieldError('rent')}</label>
             <div className="form-summary"><span>Service fee</span><b>To be confirmed</b><span>Rent amount for this test</span><b>{money(Number(rent) || 0)}</b></div>
           </div>}
           {step === 2 && <div className="step-content">
