@@ -28,6 +28,10 @@
 .work-test-note svg{flex:none}
 .work-sheet{background:#fff;border:1px solid var(--brand-border);border-radius:10px;padding:24px;margin-top:24px}
 .work-sheet h2,.work-section-heading h2{font-size:17px;line-height:1.4;margin:0;color:var(--brand-ink)}
+.work-edit-fields{border:0;padding:0;margin:0 0 16px;min-width:0;display:grid;gap:14px}
+.work-edit-fields .field-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.work-edit-fields :is(input,select):not([type="checkbox"]){min-width:0;width:100%;min-height:44px;font-size:16px}
+@media(max-width:480px){.work-edit-fields .field-pair{grid-template-columns:minmax(0,1fr)}}
 .work-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 18px}
 .work-section-heading>span{font-size:12px;color:var(--brand-secondary);overflow-wrap:anywhere}
 .work-section-heading>a{display:inline-flex;align-items:center;gap:6px;color:var(--brand-link);text-decoration:none;min-height:36px;font-size:13px}

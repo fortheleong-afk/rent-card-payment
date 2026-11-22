@@ -5,6 +5,7 @@ export type ApplicationGroup = 'active' | 'complete' | 'closed';
 // Presentation only: payment and payout state still come from the shared journey.
 export function tenantTask(journey: Journey): { group: ApplicationGroup; priority: number; action: string } {
  switch (journey.key) {
+  case 'needs_changes': return { group: 'active', priority: 0, action: 'Update your application' };
   case 'payout_attention': return { group: 'active', priority: 0, action: 'View payout issue' };
   case 'payment_failed': return { group: 'active', priority: 1, action: 'View payment issue' };
   case 'legacy': return { group: 'active', priority: 2, action: 'Check application status' };

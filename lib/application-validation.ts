@@ -1,7 +1,7 @@
 import type { DraftPayload } from './application-drafts';
 export const APPLICATION_STEPS=['Lease contract','Rent details','Deposit account','Review & submit'];
-export type ApplicationField='file'|'address'|'contractStart'|'contractEnd'|'rent'|'landlordName'|'bank'|'account';
-export const FIELD_IDS:Record<ApplicationField,string>={file:'lease-file',address:'property-address',contractStart:'lease-start',contractEnd:'lease-end',rent:'monthly-rent',landlordName:'landlord-name',bank:'landlord-bank',account:'account-number'};
+export type ApplicationField='file'|'address'|'contractStart'|'contractEnd'|'rent'|'landlordName'|'bank'|'account'|'rentMonth'|'dueDate';
+export const FIELD_IDS:Record<ApplicationField,string>={file:'lease-file',address:'property-address',contractStart:'lease-start',contractEnd:'lease-end',rent:'monthly-rent',landlordName:'landlord-name',bank:'landlord-bank',account:'account-number',rentMonth:'rent-month',dueDate:'rent-due-date'};
 export const BANK_OPTIONS=[['국민은행','KB Kookmin Bank'],['신한은행','Shinhan Bank'],['우리은행','Woori Bank'],['하나은행','Hana Bank'],['농협은행','NH Nonghyup Bank'],['기업은행','IBK Bank'],['카카오뱅크','KakaoBank'],['토스뱅크','Toss Bank']] as const;
 export function bankLabel(value:string|null|undefined){return BANK_OPTIONS.find(([id])=>id===value)?.[1]||value||'Not provided';}
 const validDate=(value:string)=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(value)||value.startsWith('0000'))return false;const date=new Date(`${value}T00:00:00Z`);return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value;};
@@ -13,6 +13,9 @@ export function validateApplicationStep(step:number,p:DraftPayload,hasFile:boole
   else if(p.address.trim().length>500)errors.address='Use 500 characters or fewer.';
   if(!validDate(p.contractStart))errors.contractStart='Enter the lease start date.';
   if(!validDate(p.contractEnd)||(validDate(p.contractStart)&&p.contractEnd<p.contractStart))errors.contractEnd='Enter an end date on or after the start date.';
+  if(!validDate(p.rentMonth+'-01'))errors.rentMonth='Enter the rent month as YYYY-MM.';
+  else if((validDate(p.contractStart)&&p.rentMonth<p.contractStart.slice(0,7))||(validDate(p.contractEnd)&&p.rentMonth>p.contractEnd.slice(0,7)))errors.rentMonth='Choose a month within your lease period.';
+  if(!validDate(p.dueDate))errors.dueDate='Enter the rent due date shown in your lease.';
   const amount=Number(p.rent);
   if(!p.rent||!Number.isSafeInteger(amount)||amount<1||amount>1000000000)errors.rent='Enter a whole amount from ₩1 to ₩1,000,000,000.';
  }

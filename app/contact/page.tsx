@@ -11,7 +11,7 @@ export default function ContactPage() {
       <p className="info-lead">Have a question about an application, a contract file or the test flow? Use the channels below and include your application number when available.</p>
       <div className="contact-grid">
         <div className="contact-card"><Mail size={20} color="var(--blue)"/><h2>Email support</h2><p>For account and application questions, email <a href="mailto:fortheleong@gmail.com">fortheleong@gmail.com</a>.</p></div>
-        <div className="contact-card"><MessageCircle size={20} color="var(--blue)"/><h2>Application support</h2><p>Open your dashboard and share the application number shown in the detail page so the operator can find the correct record.</p></div>
+        <div className="contact-card"><MessageCircle size={20} color="var(--blue)"/><h2>Application support</h2><p>For a status check, correction or data deletion request, send your application number from the email address on your account. Keep contracts, payment details and passwords out of your email.</p></div>
       </div>
       <div className="info-note"><div><strong>Test service response</strong>This is a prototype operated for workflow testing. Support responses do not represent a financial institution or a completed payment service.</div></div>
     </section>

@@ -21,6 +21,8 @@ html{scroll-padding-top:6rem}
 .auth-box .primary{min-height:48px;font-size:16px}
 .auth-box .primary:disabled{opacity:.65;cursor:wait}
 .auth-box .auth-help{font-size:14px;line-height:1.7;flex-wrap:wrap}
+.auth-box .review-confirm,.work-edit-fields .review-confirm{display:flex;align-items:flex-start;gap:10px;min-height:44px;line-height:1.5}
+.auth-box .review-confirm input[type=checkbox],.work-edit-fields .review-confirm input[type=checkbox]{flex:0 0 19px;width:19px;height:19px;min-height:19px;margin:3px 0 0;accent-color:var(--brand-accent)}
 .account-profile{max-width:640px}
 .account-profile>p{font-size:14px;line-height:1.7;color:var(--brand-secondary)}
 .account-profile>.work-button{margin-top:20px}

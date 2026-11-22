@@ -1,0 +1,53 @@
+name: Verify Divercity Pay
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://fixture.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: fixture-key
+      NEXT_TELEMETRY_DISABLED: '1'
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: fixture-only
+      PGDATABASE: divercity_test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: divercity_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:core
+      - run: npm run build
+      - name: Verify migration order and database workflows
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/local_platform.sql -f supabase/schema.sql
+          for migration in supabase/migrations/*.sql; do
+            psql -X -v ON_ERROR_STOP=1 -f "$migration"
+          done
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/application_drafts.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/payment_simulator.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/operations.sql

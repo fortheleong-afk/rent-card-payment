@@ -1,6 +1,9 @@
 -- QA metadata fixture only; no actual file blob or financial API. All changes roll back.
 begin;
-select set_config('request.jwt.claim.sub','179a648b-e817-40cd-88c9-29a8ce2a3b15',true);
+insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values
+ ('10000000-0000-0000-0000-000000000001','tenant@fixture.invalid',now(),'{"full_name":"Tenant Test","phone":"+12025550101"}'),
+ ('10000000-0000-0000-0000-000000000002','other@fixture.invalid',now(),'{"full_name":"Other Test","phone":"+12025550102"}');
+select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 do $$ declare d public.application_drafts; begin
  d:=public.open_application_draft(false);
  if d.state='submitting' then d:=public.edit_application_draft(d.id);end if;
@@ -9,6 +12,7 @@ do $$ declare d public.application_drafts; begin
  values('contract-documents',d.user_id::text||'/'||d.id::text||'/'||repeat('a',64)||'.png','{"size":128,"mimetype":"image/png"}'::jsonb,now()-interval '8 days');
 end $$;
 set local role authenticated;
+select public.accept_site_terms('2026-11-09');
 do $$ declare d public.application_drafts; restored public.application_drafts; original_id uuid; rev integer; number text; again text;
  payload jsonb:='{"address":"QA draft recovery only","contractStart":"2026-11-01","contractEnd":"2027-10-31","rent":"750000","landlordName":"QA LANDLORD","bank":"신한은행","account":"000000000000"}'; path text;
 begin
@@ -16,24 +20,24 @@ begin
  restored:=public.open_application_draft(false);
  if restored.id<>d.id then raise exception 'Open created a duplicate draft';end if;
  path:=d.user_id::text||'/'||d.id::text||'/'||repeat('a',64)||'.png';
- d:=public.save_application_draft(d.id,d.revision,payload,2,path,'qa-draft.png',false);
+ d:=public.save_draft_with_schedule(d.id,d.revision,payload,2,path,'qa-draft.png',false,'2026-12-01','2026-12-05');
  restored:=public.open_application_draft(false);
  if restored.id<>original_id or restored.payload<>payload or restored.step<>2 or restored.contract_file_path<>path or restored.contract_file_size<>128 then raise exception 'Draft restore failed';end if;
  if public.can_delete_unlinked_contract(path,now()-interval '8 days') then raise exception 'Saved contract deletion allowed';end if;
- begin perform public.save_application_draft(d.id,rev,payload,2,path,'qa-draft.png',false);raise exception 'Stale save accepted';exception when serialization_failure then null;end;
+ begin perform public.save_draft_with_schedule(d.id,rev,payload,2,path,'qa-draft.png',false,'2026-12-01','2026-12-05');raise exception 'Stale save accepted';exception when serialization_failure then null;end;
  begin perform public.open_application_draft(true);raise exception 'Active draft replaced';exception when invalid_parameter_value then null;end;
- perform set_config('request.jwt.claim.sub','715b286c-24f5-44cc-8569-593f3ee94bfa',true);
+ perform set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000002',true);
  if exists(select 1 from public.application_drafts where id=original_id) then raise exception 'Other user draft visible';end if;
- begin perform public.save_application_draft(original_id,d.revision,payload,2,path,'qa-draft.png',false);raise exception 'Other user save allowed';exception when insufficient_privilege then null;end;
+ begin perform public.save_draft_with_schedule(original_id,d.revision,payload,2,path,'qa-draft.png',false,'2026-12-01','2026-12-05');raise exception 'Other user save allowed';exception when insufficient_privilege then null;end;
  begin perform public.submit_application_draft(original_id);raise exception 'Other user submission allowed';exception when insufficient_privilege then null;end;
- perform set_config('request.jwt.claim.sub','179a648b-e817-40cd-88c9-29a8ce2a3b15',true);
- d:=public.save_application_draft(d.id,d.revision,payload,3,path,'qa-draft.png',true);
+ perform set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
+ d:=public.save_draft_with_schedule(d.id,d.revision,payload,3,path,'qa-draft.png',true,'2026-12-01','2026-12-05');
  restored:=public.open_application_draft(false);
  if restored.state<>'submitting' or restored.id<>original_id then raise exception 'Pending recovery lost ID';end if;
- begin perform public.save_application_draft(d.id,d.revision,payload,1,path,'qa-draft.png',false);raise exception 'Prepared contents mutated';exception when invalid_parameter_value then null;end;
+ begin perform public.save_draft_with_schedule(d.id,d.revision,payload,1,path,'qa-draft.png',false,'2026-12-01','2026-12-05');raise exception 'Prepared contents mutated';exception when invalid_parameter_value then null;end;
  d:=public.edit_application_draft(d.id);
  if d.state<>'editing' then raise exception 'Safe edit recovery failed';end if;
- d:=public.save_application_draft(d.id,d.revision,payload,3,path,'qa-draft.png',true);
+ d:=public.save_draft_with_schedule(d.id,d.revision,payload,3,path,'qa-draft.png',true,'2026-12-01','2026-12-05');
  number:=public.submit_application_draft(d.id);again:=public.submit_application_draft(d.id);
  if number is null or number<>again then raise exception 'Retry result differs';end if;
  if(select count(*) from public.rent_applications where id=original_id)<>1 then raise exception 'Duplicate submission';end if;

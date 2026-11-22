@@ -1,14 +1,25 @@
--- Uses only the existing admin-owned QA fixture; all writes roll back.
+-- Disposable, synthetic fixtures. No real financial API calls.
 begin;
-update public.payment_orders set payment_status='pending',payout_status='not_ready'
-where application_id='0a60be5d-3a48-46c5-9dce-695c77992800';
+insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values
+ ('10000000-0000-0000-0000-000000000001','tenant@fixture.invalid',now(),'{"full_name":"Tenant Test","phone":"+12025550101"}'),
+ ('10000000-0000-0000-0000-000000000002','other@fixture.invalid',now(),'{"full_name":"Other Test","phone":"+12025550102"}');
+insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data)
+values('10000000-0000-0000-0000-000000000003','ops@fixture.invalid',now(),'{"full_name":"Operator Test","phone":"+12025550103"}');
+alter table public.profiles disable trigger protect_profile_privileges;
+update public.profiles set role='admin' where id='10000000-0000-0000-0000-000000000003';
+alter table public.profiles enable trigger protect_profile_privileges;
+set local request.jwt.claim.sub='10000000-0000-0000-0000-000000000003';
+set local request.jwt.claims='{"aal":"aal2","session_id":"qa-admin"}';
+select public.accept_site_terms('2026-11-09');
+insert into public.rent_applications(id,user_id,application_number,rent_amount,total_amount,service_fee,status)
+values('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000003','DP-SIMULATOR-QA',750000,750000,0,'approved');
 set local role authenticated;
-set local request.jwt.claim.sub='715b286c-24f5-44cc-8569-593f3ee94bfa';
+select public.create_test_payment_order('20000000-0000-0000-0000-000000000001');
 do $$
 declare o public.payment_orders; replay public.payment_orders; request uuid:=gen_random_uuid();
   initial_version integer; history_count bigint; notification_count bigint; action text;
 begin
- select * into strict o from public.payment_orders where application_id='0a60be5d-3a48-46c5-9dce-695c77992800';
+ select * into strict o from public.payment_orders where application_id='20000000-0000-0000-0000-000000000001';
  initial_version:=o.version;
  select count(*) into history_count from public.payment_order_events where order_id=o.id;
  select count(*) into notification_count from public.notifications where application_id=o.application_id;
@@ -35,7 +46,7 @@ begin
  if (select count(*) from public.notifications where application_id=o.application_id)<>notification_count+15 then raise exception 'Notifications not atomic'; end if;
  if has_function_privilege('anon','public.simulate_test_payment_order(uuid,text,uuid,integer)','EXECUTE') then raise exception 'Anonymous execute permitted'; end if;
  if has_table_privilege('authenticated','public.payment_order_events','INSERT') or has_table_privilege('authenticated','public.payment_orders','UPDATE') then raise exception 'Direct writes permitted'; end if;
- perform set_config('request.jwt.claim.sub','179a648b-e817-40cd-88c9-29a8ce2a3b15',true);
+ perform set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
  begin perform public.simulate_test_payment_order(o.id,'payment_success',gen_random_uuid(),o.version);
   raise exception 'Non-admin simulator allowed'; exception when insufficient_privilege then null; end;
  if exists(select 1 from public.payment_order_events where order_id=o.id) then raise exception 'Other user history leaked'; end if;

@@ -11,10 +11,10 @@ import AccountScreen from '../../../components/ui/AccountScreen';
 import {Button} from '@astryxdesign/core/Button';
 import styles from './application.module.css';
 import { TestNotice } from '../../../components/WorkflowStatus';
-import { createContractLink } from '../../../lib/contracts';
+import { checkLeaseFile,createContractLink,leaseObjectPath } from '../../../lib/contracts';
+import { TERMS_VERSION } from '../../../lib/terms-version';
+import { reportOperationError } from '../../../lib/operation-errors';
 import { APPLICATION_STEPS as STEPS,BANK_OPTIONS,FIELD_IDS,bankLabel,validateApplicationStep,type ApplicationField } from '../../../lib/application-validation';
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
-const VALID_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 const money = (value: number) => `₩${new Intl.NumberFormat('ko-KR').format(value)}`;
 const maskAccount = (value: string) => value ? `••••${value.replace(/\D/g, '').slice(-4)}` : '—';
 
@@ -31,6 +31,10 @@ export default function NewApplication() {
   const [address, setAddress] = useState('');
   const [contractStart, setContractStart] = useState('');
   const [contractEnd, setContractEnd] = useState('');
+  const [rentMonth,setRentMonth]=useState('');
+  const [dueDate,setDueDate]=useState('');
+  const [intakeOpen,setIntakeOpen]=useState(true);
+  const [confirmDiscard,setConfirmDiscard]=useState(false);
   const [file, setFile] = useState<File | StoredContract | null>(null);
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [message, setMessage] = useState('');
@@ -41,6 +45,7 @@ export default function NewApplication() {
   const [previewing,setPreviewing]=useState(false),[previewError,setPreviewError]=useState('');
   const focusTarget=useRef<Field|null>(null);
   const localPreview=useRef<string|null>(null);
+  const fileSelection=useRef(0);
   const stepChanged=useRef(false);
   const attempt = useRef<Attempt | null>(null);
   const submitting = useRef(false);
@@ -55,13 +60,14 @@ export default function NewApplication() {
   const saveQueue=useRef<Promise<unknown>>(Promise.resolve());
   const active=useRef(true);
   const snapshot=useRef({payload:emptyDraftPayload,step:0,file:null as File|StoredContract|null});
-  snapshot.current={payload:{address,contractStart,contractEnd,rent,landlordName,bank,account},step,file};
+  snapshot.current={payload:{address,contractStart,contractEnd,rent,landlordName,bank,account,rentMonth,dueDate},step,file};
 
   const applyDraft=useCallback((d:ApplicationDraft)=>{
-    const p={...emptyDraftPayload,...d.payload};
+    const p={...emptyDraftPayload,...d.payload,rentMonth:d.rent_month?.slice(0,7)??'',dueDate:d.rent_due_date??''};
     const savedFile:StoredContract|null=d.contract_file_path&&d.contract_file_name?{name:d.contract_file_name,size:d.contract_file_size??0,type:d.contract_file_type??'',path:d.contract_file_path}:null;
     serverDraft.current=d;setDraft(d);setUserId(d.user_id);
     setAddress(p.address);setContractStart(p.contractStart);setContractEnd(p.contractEnd);setRent(p.rent);
+    setRentMonth(p.rentMonth);setDueDate(p.dueDate);setConfirmDiscard(false);
     setLandlordName(p.landlordName);setBank(p.bank);setAccount(p.account);setFile(savedFile);setStep(d.step);
     snapshot.current={payload:p,step:d.step,file:savedFile};
     lastSaved.current=draftSignature(p,d.step,savedFile);
@@ -73,9 +79,12 @@ export default function NewApplication() {
     try{
       const {data:auth,error:authError}=await supabase.auth.getUser();
       if(authError||!auth.user){window.location.href='/login?next=/applications/new';return;}
-      const {data,error}=await supabase.rpc('open_application_draft',{p_new:startNew});
+      const [{data,error},{data:intake}]=await Promise.all([
+        supabase.rpc('open_application_draft',{p_new:startNew}),
+        supabase.rpc('application_intake_open'),
+      ]);
       if(error)throw error;if(!data)throw new Error('Your saved application is unavailable.');
-      if(active.current)applyDraft(data as ApplicationDraft);
+      if(active.current){setIntakeOpen(intake!==false);applyDraft(data as ApplicationDraft);}
     }catch(e){if(active.current)setMessage(draftError(e));}
     finally{if(active.current)setLoading(false);}
   },[applyDraft]);
@@ -101,10 +110,8 @@ export default function NewApplication() {
         if(current.file){
           if(current.file instanceof File){
             if(!attempt.current||attempt.current.file!==current.file){
-              const digest=await crypto.subtle.digest('SHA-256',await current.file.arrayBuffer());
-              const hash=Array.from(new Uint8Array(digest),byte=>byte.toString(16).padStart(2,'0')).join('');
-              const extension=current.file.type==='application/pdf'?'pdf':current.file.type==='image/png'?'png':'jpg';
-              attempt.current={id:d.id,path:`${d.user_id}/${d.id}/${hash}.${extension}`,uploaded:false,file:current.file};
+              const path=await leaseObjectPath(d.user_id,d.id,current.file);
+              attempt.current={id:d.id,path,uploaded:false,file:current.file};
             }
             const pending=attempt.current;
             if(!pending.uploaded){
@@ -115,7 +122,8 @@ export default function NewApplication() {
             path=pending.path;
           }else path=current.file.path;
         }
-        const {data,error}=await supabase.rpc('save_application_draft',{p_id:d.id,p_revision:d.revision,p_payload:current.payload,p_step:current.step,p_file_path:path,p_file_name:current.file?.name??null,p_prepare:prepare});
+        const {rentMonth,dueDate,...payload}=current.payload;
+        const {data,error}=await supabase.rpc('save_draft_with_schedule',{p_id:d.id,p_revision:d.revision,p_payload:payload,p_step:current.step,p_file_path:path,p_file_name:current.file?.name??null,p_prepare:prepare,p_month:/^\d{4}-(0[1-9]|1[0-2])$/.test(rentMonth)&&!rentMonth.startsWith('0000')?rentMonth+'-01':null,p_due:dueDate||null});
         if(error){if(error.code==='40001')setConflict(true);throw error;}
         if(!data)throw new Error('The saved result was not confirmed.');
         serverDraft.current=data as ApplicationDraft;lastSaved.current=signature;
@@ -127,10 +135,32 @@ export default function NewApplication() {
     saveQueue.current=task.catch(()=>undefined);return task;
   };
   useEffect(()=>{
-    if(!ready||complete||uncertain||conflict||loading)return;
+    if(!ready||complete||uncertain||conflict||loading||confirmDiscard)return;
     const timer=window.setTimeout(()=>{saveDraft().catch(()=>undefined);},900);
     return()=>window.clearTimeout(timer);
-  },[ready,complete,uncertain,conflict,loading,address,contractStart,contractEnd,rent,landlordName,bank,account,step,file]);
+  },[ready,complete,uncertain,conflict,loading,confirmDiscard,address,contractStart,contractEnd,rent,landlordName,bank,account,rentMonth,dueDate,step,file]);
+
+  async function discardDraft() {
+    if (submitting.current) return;
+    submitting.current=true;
+    setLoading(true);
+    setMessage('');
+    try {
+      await saveQueue.current;
+      const d=serverDraft.current;
+      if (!d || d.state!=='editing') throw new Error('Check your submission result before discarding this draft.');
+      const {data,error}=await supabase.rpc('discard_application_draft',{p_id:d.id,p_revision:d.revision});
+      if(error)throw error;
+      serverDraft.current=null;
+      if(data)await supabase.storage.from('contract-documents').remove([String(data)]).then(() => {}, () => {});
+      window.location.assign('/dashboard');
+    } catch {
+      setMessage('The draft could not be discarded. Reload the saved draft and try again.');
+    } finally {
+      submitting.current=false;
+      setLoading(false);
+    }
+  }
 
   const saveAndExit=async()=>{
     if(submitting.current)return;submitting.current=true;setLoading(true);
@@ -156,12 +186,16 @@ export default function NewApplication() {
       if(preview)preview.location.href=url;else setPreviewError('Your browser blocked the preview. Allow pop-ups for this site and try again.');
     }catch(e){preview?.close();setPreviewError(e instanceof Error?e.message:'Could not open the contract. Try again.');}finally{setPreviewing(false);}
   };
-  const chooseFile = (event: ChangeEvent<HTMLInputElement>) => {
-    const selected = event.target.files?.[0] ?? null;
+  const chooseFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const input=event.currentTarget;
+    const selected = input.files?.[0] ?? null;
+    const selection=++fileSelection.current;
     if (!selected) return;
-    if (!VALID_TYPES.includes(selected.type) || selected.size < 1 || selected.size > MAX_FILE_BYTES) {
-      setErrors(previous => ({ ...previous, file: `Choose a PDF, JPG or PNG file between 1 byte and 10 MB.${file?' Your previously selected file has been kept.':''}` }));
-      event.target.value = '';
+    const issue=await checkLeaseFile(selected);
+    if(selection!==fileSelection.current)return;
+    if (issue) {
+      setErrors(previous => ({ ...previous, file: issue+(file?' Your previously selected file has been kept.':'') }));
+      input.value = '';
       return;
     }
     setFile(selected);setPreviewError('');
@@ -195,7 +229,7 @@ export default function NewApplication() {
   const submit = async (event:FormEvent) => {
     event.preventDefault();
     if(!uncertain&&step<STEPS.length-1){nextStep();return;}
-    if(submitting.current||!userId||!serverDraft.current)return;
+    if(submitting.current||!userId||!serverDraft.current||!intakeOpen)return;
     if(!uncertain){
       if(step!==STEPS.length-1||!file)return;
       if(!reviewConfirmed){setMessage('Confirm the details before submitting.');document.getElementById('review-confirmation')?.focus();return;}
@@ -209,6 +243,8 @@ export default function NewApplication() {
         const {data:profile,error}=await supabase.from('profiles').select('full_name,phone').eq('id',userId).maybeSingle();
         if(error)throw error;
         if(!profile?.full_name?.trim()||!profile?.phone?.trim())throw new Error('Add your name and contact number in Profile before submitting.');
+        const {error:termsError}=await supabase.rpc('accept_site_terms',{p_version:TERMS_VERSION});
+        if(termsError)throw termsError;
         setUncertain(true);
         await saveDraft(true);
       }
@@ -218,7 +254,7 @@ export default function NewApplication() {
       // The wrapper calls the existing atomic submit function with the saved ID.
       setComplete(String(data));setUncertain(false);setSaveError('');
       serverDraft.current={...serverDraft.current!,state:'submitted',application_number:String(data)};
-    }catch(e){setMessage(draftError(e));}
+    }catch(e){reportOperationError('submit_application');setMessage(draftError(e));}
     finally{submitting.current=false;setLoading(false);}
   };
 
@@ -241,10 +277,12 @@ export default function NewApplication() {
     <section className="dashboard-main wrap application-shell" id="application-content" tabIndex={-1}>
       <div className="work-page-heading"><div><h1>Apply for rent payment</h1><p>Save your progress, check the details, then submit for test review.</p></div></div>
       <TestNotice/>
+      {!intakeOpen&&<p className="draft-warning" role="status">New submissions are paused. You can still review and save your draft.</p>}
       <div className="draft-save-bar" aria-label="Draft save status">
         <div><strong aria-live="polite">{conflict?'Another tab changed this draft':saving?'Saving your private draft…':saveError?'Draft not saved':draftSignature(snapshot.current.payload,step,file)!==lastSaved.current?'Unsaved changes':`Saved ${draft?new Date(draft.updated_at).toLocaleTimeString('en-GB'):''}`}</strong><p>Private draft · not submitted until you confirm the final step.</p></div>
-        {!uncertain&&!conflict&&<Button label="Save & exit" size="lg" isDisabled={loading||saving} onClick={saveAndExit}/>}
+        {!uncertain&&!conflict&&!confirmDiscard&&<div className="draft-recovery-actions"><Button label="Save & exit" size="lg" isDisabled={loading||saving} onClick={saveAndExit}/><Button label="Discard draft" isDisabled={loading||saving} onClick={()=>setConfirmDiscard(true)}/></div>}
       </div>
+      {confirmDiscard&&<section className="draft-warning" aria-labelledby="discard-title"><strong id="discard-title">Discard this draft?</strong><p>This removes the saved application details. You can start again from your dashboard.</p><div className="draft-recovery-actions"><Button label="Keep draft" isDisabled={loading} onClick={()=>setConfirmDiscard(false)}/><button type="button" className="work-button work-button-danger" disabled={loading} onClick={discardDraft}>Confirm discard</button></div></section>}
       {saveError&&<div className="draft-warning" role="alert"><p>{saveError}</p>{!conflict&&!uncertain&&<Button label="Retry save" isDisabled={saving||loading} onClick={()=>saveDraft().catch(()=>undefined)}/>}</div>}
       {conflict&&<div className="draft-warning" role="alert"><p>Newer saved changes are protected. Reload the saved draft before editing further.</p><Button label="Reload saved draft" isDisabled={loading} onClick={()=>restore()}/></div>}
       {uncertain&&<div className="draft-warning" role="status"><strong>Check your submission result</strong><p>This application keeps the same submission ID after refresh. Check the result first. If it is still pending, retry the saved submission without creating a new application.</p><div className="draft-recovery-actions"><Button label="Check saved result" isDisabled={loading} onClick={()=>restore()}/><Button label="Return to saved details" isDisabled={loading} onClick={resumeEditing}/></div></div>}
@@ -276,6 +314,12 @@ export default function NewApplication() {
               <label htmlFor="lease-end">Lease end date <span className="required">Required</span>
                 <input name="lease_end" required id="lease-end" type="date" value={contractEnd} min={contractStart || undefined} onChange={event => { setContractEnd(event.target.value); clearError('contractEnd'); }} aria-invalid={invalid('contractEnd')} aria-describedby={errors.contractEnd ? 'contractEnd-error' : undefined}/>{fieldError('contractEnd')}</label>
             </div>
+            <div className="field-pair">
+              <label htmlFor="rent-month">Rent month <span className="required">Required</span>
+                <input id="rent-month" name="rent_month" type="month" placeholder="YYYY-MM" value={rentMonth} onChange={event=>{setRentMonth(event.target.value);clearError('rentMonth');}} aria-invalid={invalid('rentMonth')} aria-describedby={errors.rentMonth?'rentMonth-error':undefined} required/>{fieldError('rentMonth')}</label>
+              <label htmlFor="rent-due-date">Rent due date <span className="required">Required</span>
+                <input id="rent-due-date" name="due_date" type="date" value={dueDate} onChange={event=>{setDueDate(event.target.value);clearError('dueDate');}} aria-invalid={invalid('dueDate')} aria-describedby={errors.dueDate?'dueDate-error':undefined} required/>{fieldError('dueDate')}</label>
+            </div>
             <label htmlFor="monthly-rent">Monthly rent (KRW) <span className="required">Required</span>
               <input name="rent" required id="monthly-rent" type="number" inputMode="numeric" min="1" max="1000000000" step="1" value={rent} onChange={event => { setRent(event.target.value); clearError('rent'); }} aria-invalid={invalid('rent')} aria-describedby={errors.rent ? 'rent-error' : undefined}/>{fieldError('rent')}</label>
             <div className="form-summary"><span>Service fee</span><b>To be confirmed</b><span>Rent amount for this test</span><b>{money(Number(rent) || 0)}</b></div>
@@ -297,13 +341,15 @@ export default function NewApplication() {
               <div><dt>Contract</dt><dd>{file?.name}<button type="button" className="review-edit" onClick={()=>goToStep(0)}>Change contract</button></dd></div>
               <div><dt>Property</dt><dd>{address}<button type="button" className="review-edit" onClick={()=>goToStep(1)}>Edit rent details</button></dd></div>
               <div><dt>Lease dates</dt><dd>{contractStart} – {contractEnd}</dd></div>
+              <div><dt>Rent month and due date</dt><dd>{rentMonth} · Due {dueDate}</dd></div>
               <div><dt>Monthly rent</dt><dd>{money(Number(rent))}</dd></div>
               <div><dt>Service fee</dt><dd>To be confirmed</dd></div>
               <div><dt>Landlord</dt><dd>{landlordName}</dd></div>
               <div><dt>Deposit account</dt><dd>{bankLabel(bank)} · {maskAccount(account)}<button type="button" className="review-edit" onClick={()=>goToStep(2)}>Edit deposit account</button></dd></div>
             </dl>
             <p className="application-disclosure">By submitting, you send these details and the contract to Divercity Pay for a test review. No payment or transfer is made.</p>
-            <label className="review-confirm"><input id="review-confirmation" type="checkbox" checked={reviewConfirmed} onChange={event => { setReviewConfirmed(event.target.checked); setMessage(''); }}/><span>I have checked these details and want to submit this test application.</span></label>
+            <p className="application-disclosure"><Link href="/terms" target="_blank" rel="noopener noreferrer">Terms of use</Link> · <Link href="/privacy" target="_blank" rel="noopener noreferrer">Privacy policy</Link></p>
+            <label className="review-confirm"><input id="review-confirmation" type="checkbox" checked={reviewConfirmed} onChange={event => { setReviewConfirmed(event.target.checked); setMessage(''); }}/><span>I agree to the Terms of use and confirm these details for test review.</span></label>
           </div>}
         </fieldset>
         {message && <p className="auth-message application-error" role="alert">{message}{message.includes('Profile') && <> <Link href="/profile">Open Profile</Link></>}</p>}
@@ -311,7 +357,7 @@ export default function NewApplication() {
           {step > 0 && !uncertain && <button type="button" className="secondary" disabled={loading||conflict} onClick={()=>goToStep(step-1)}>Back</button>}
           {step < STEPS.length - 1 && !uncertain
             ? <button key="continue-step" type="submit" className="primary" disabled={loading||conflict}>{step===0?'Continue to rent details':step===1?'Continue to deposit account':'Review application'} <ArrowRight size={16}/></button>
-            : <button key="submit-application" type="submit" className="primary" disabled={loading || !userId || conflict}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
+            : <button key="submit-application" type="submit" className="primary" disabled={loading || !userId || conflict || !intakeOpen || confirmDiscard}>{loading ? 'Checking submission…' : uncertain ? 'Retry submission' : 'Submit test application'}</button>}
         </div>
         {uncertain && <Link href="/dashboard" className="application-status-link">Check my dashboard</Link>}
       </form>

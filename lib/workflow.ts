@@ -17,6 +17,9 @@ export function getJourney(status:string, order:OrderSummary|null|undefined, loc
  if(status==='pending_review')return make('review','info',0,
   ['Under review','Your application is with the review team.','No action needed. Check your submitted details or wait for an update.'],
   ['심사 대기','계약서와 신청 정보를 확인해야 합니다.','계약서를 열고 금액·임대인 정보를 검토한 뒤 승인 또는 반려하세요.']);
+ if(status==='needs_changes')return make('needs_changes','warning',0,
+  ['Changes requested','The review team needs you to update this application.','Read the request, make the changes and send the same application back for review.'],
+  ['보완 대기','신청자에게 자료 보완을 요청했습니다.','보완 제출이 들어오면 다시 심사하세요.']);
  if(status==='rejected')return make('rejected','warning',0,
   ['Application declined','This application did not pass review.','Check the review reason in your application. You can submit corrected details in a new application.'],
   ['심사 반려','해당 신청의 심사가 종료됐습니다.','반려 사유와 제출 자료를 확인하세요. 새 신청은 별도로 접수됩니다.']);

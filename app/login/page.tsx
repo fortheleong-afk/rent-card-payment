@@ -20,5 +20,5 @@ export default function Login(){
   <FormField id="login-email" name="email" label="Email" type="email" autoComplete="username" spellCheck={false} autoCapitalize="none" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" enterKeyHint="next"/>
   <FormField id="login-password" name="password" label="Password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} enterKeyHint="go"/>
   <div className="account-feedback" role="status" aria-live="polite">{message}</div><button type="submit" className="primary full" disabled={loading}>{loading?'Logging in…':'Log in'}</button>
- </form><div className="auth-help"><span>Don’t have an account?</span><Link href="/signup">Sign up</Link></div><small><LockKeyhole size={13} aria-hidden="true"/> Financial transactions are in test mode</small><noscript>JavaScript is required to sign in securely.</noscript></div></main>;
+ </form><p className="auth-help"><Link href="/login/recovery">Forgot your password?</Link></p><div className="auth-help"><span>Don’t have an account?</span><Link href="/signup">Sign up</Link></div><small><LockKeyhole size={13} aria-hidden="true"/> Financial transactions are in test mode</small><noscript>JavaScript is required to sign in securely.</noscript></div></main>;
 }
