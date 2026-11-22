@@ -10,6 +10,7 @@ create table divercity_private.operating_settings (
   email_updates boolean not null default false
 );
 insert into divercity_private.operating_settings default values;
+alter table divercity_private.operating_settings enable row level security;
 
 -- Applies also to all existing review/order RPCs that call is_admin().
 create or replace function public.is_admin()
@@ -79,6 +80,7 @@ begin
   values (auth.uid(), p_version) on conflict do nothing;
 end;
 $$;
+alter table divercity_private.terms_acceptances enable row level security;
 revoke all on function public.accept_site_terms(text) from public, anon;
 grant execute on function public.accept_site_terms(text) to authenticated;
 
@@ -132,6 +134,7 @@ create table divercity_private.admin_access_events (
 );
 create index admin_contract_session_idx on divercity_private.admin_access_events
   (actor_id, session_id, object_path, occurred_at desc) where object_path is not null;
+alter table divercity_private.admin_access_events enable row level security;
 
 create or replace function public.authorize_application_access(p_id uuid, p_action text)
 returns void language plpgsql security definer set search_path = ''
@@ -218,6 +221,7 @@ as $$
   where auth.uid() is not null and p_operation in ('submit_application','contract_link')
   on conflict do nothing;
 $$;
+alter table divercity_private.operation_errors enable row level security;
 revoke all on function public.report_operation_error(text) from public, anon;
 grant execute on function public.report_operation_error(text) to authenticated;
 

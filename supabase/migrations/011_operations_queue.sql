@@ -101,6 +101,7 @@ create table divercity_private.review_email_outbox (
 );
 create index review_email_due_idx on divercity_private.review_email_outbox(next_attempt_at)
   where accepted_at is null and attempts < 5;
+alter table divercity_private.review_email_outbox enable row level security;
 
 create or replace function divercity_private.enqueue_review_email()
 returns trigger language plpgsql security definer set search_path = ''
@@ -171,6 +172,7 @@ begin
   end if;
 end;
 $$;
+alter table divercity_private.intake_changes enable row level security;
 revoke all on function public.set_application_intake(boolean) from public, anon;
 grant execute on function public.set_application_intake(boolean) to authenticated;
 

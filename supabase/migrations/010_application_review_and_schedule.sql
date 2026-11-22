@@ -137,6 +137,7 @@ create table divercity_private.application_revisions (
   primary key (application_id, revision)
 );
 create index application_revision_contract_idx on divercity_private.application_revisions(contract_file_path);
+alter table divercity_private.application_revisions enable row level security;
 
 create or replace function public.can_delete_unlinked_contract(p_path text, p_created_at timestamptz)
 returns boolean language sql stable security definer set search_path = ''
